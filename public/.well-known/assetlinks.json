@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.readerblox.twa",
+      "sha256_cert_fingerprints": [
+        "54:F8:D5:E0:9F:00:74:2C:41:7F:41:D8:D9:B8:A8:31:94:7D:8E:1E:14:7B:3A:4D:7D:8D:0E:D5:8C:DD:1E:94"
+      ]
+    }
+  }
+]
