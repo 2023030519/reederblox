@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/hooks";
+import { Logo } from "@/components/logo";
 
 // Last known sign-in, kept in localStorage. Server render assumes "signed in", so a returning user never sees "Entrar"
 // flash while the session loads; the real value replaces it on hydration.
@@ -65,7 +66,7 @@ export function Header() {
       <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur">
         <nav aria-label="Principal" className="mx-auto flex max-w-[1100px] items-center gap-1 px-4 py-2 text-sm font-medium">
           <Link href="/" aria-label="readerblox" className={`mr-6 flex items-center text-lg font-semibold tracking-tighter ${scrolled ? "logo-collapsed" : ""}`}>
-            <span aria-hidden className="flex size-7 shrink-0 items-center justify-center rounded-xl bg-fg text-sm font-semibold text-bg">r</span>
+            <Logo className="h-7 w-auto shrink-0" />
             <span aria-hidden className="logo-name"><span className="pl-2">readerblox</span></span>
           </Link>
           <div className="hidden flex-1 items-center justify-evenly gap-1 sm:flex">

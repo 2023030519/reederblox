@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "readerblox",
     short_name: "readerblox",
     description: "Lector de manga y webtoons de obras propias",
@@ -10,6 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     orientation: "portrait",
     lang: "es",
+    categories: ["entertainment", "books"],
     background_color: "#111318",
     theme_color: "#be123c",
     icons: [

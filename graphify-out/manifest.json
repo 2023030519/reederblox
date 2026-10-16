@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "app/manifest.ts": {
-    "mtime": 1792128926.4831448,
-    "seen": 1792129018.9357016,
-    "ast_hash": "360843846357d9faa6e7ac6a89a7db49",
+    "mtime": 1792162633.7976308,
+    "seen": 1792162662.3713906,
+    "ast_hash": "e48bdb9c2484bfcb0584bfe23259b6c7",
     "semantic_hash": ""
   },
   "app/normas/page.tsx": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "components/header.tsx": {
-    "mtime": 1792161820.422896,
-    "seen": 1792161975.4904108,
-    "ast_hash": "878ac3dec8b4716b2cc09f18648df101",
+    "mtime": 1792162546.5459433,
+    "seen": 1792162662.371433,
+    "ast_hash": "b0f58217c1f7b14febecc123e20ac5c7",
     "semantic_hash": ""
   },
   "components/offline-button.tsx": {
@@ -318,27 +318,27 @@
     "semantic_hash": ""
   },
   "public/icons/apple-touch-icon.png": {
-    "mtime": 1792106069.0129168,
-    "seen": 1792122292.2585015,
-    "ast_hash": "fcf595f447060e5589bb368987cb2bd6",
+    "mtime": 1792162621.209,
+    "seen": 1792162662.371683,
+    "ast_hash": "88a1a6c7f46cdf69b4ead09b755498bd",
     "semantic_hash": ""
   },
   "public/icons/icon-192.png": {
-    "mtime": 1792106068.861409,
-    "seen": 1792122292.2585044,
-    "ast_hash": "548cc8eed7ee3810b403a6d93789dd4a",
+    "mtime": 1792162621.135,
+    "seen": 1792162662.3716862,
+    "ast_hash": "8373fd8c04fbd7ea0883c392b7db93ca",
     "semantic_hash": ""
   },
   "public/icons/icon-512.png": {
-    "mtime": 1792106068.9290142,
-    "seen": 1792122292.2585077,
-    "ast_hash": "5c0dcd60c3f995f97f4cfcdc0c47e2cc",
+    "mtime": 1792162621.164,
+    "seen": 1792162662.3716898,
+    "ast_hash": "bddc709515a72098ac3383d5e46b3164",
     "semantic_hash": ""
   },
   "public/icons/maskable-512.png": {
-    "mtime": 1792106069.0028553,
-    "seen": 1792122292.2585106,
-    "ast_hash": "add4c7eab2dad6eea24a887d7962a5df",
+    "mtime": 1792162621.191,
+    "seen": 1792162662.371693,
+    "ast_hash": "48fc47b8e0a673d92e974331cdd70ff9",
     "semantic_hash": ""
   },
   "public/next.svg": {
@@ -687,6 +687,24 @@
     "mtime": 1792161891.285609,
     "seen": 1792161975.4904144,
     "ast_hash": "af5168e1da34b46dae19b3c9398f2d3d",
+    "semantic_hash": ""
+  },
+  "app/favicon.svg": {
+    "mtime": 1792162091.5269957,
+    "seen": 1792162352.8010736,
+    "ast_hash": "d7a68f9142991054725b21870e0ac920",
+    "semantic_hash": ""
+  },
+  "public/readerblox-logo.svg": {
+    "mtime": 1792162298.909878,
+    "seen": 1792162352.8010905,
+    "ast_hash": "1821deb7b6d6d22f67eed5ae0eb4c7c1",
+    "semantic_hash": ""
+  },
+  "components/logo.tsx": {
+    "mtime": 1792162546.544945,
+    "seen": 1792162662.3714414,
+    "ast_hash": "61ce4f8d2788cd8b16fa90d3d7337c00",
     "semantic_hash": ""
   }
 }

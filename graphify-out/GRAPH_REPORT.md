@@ -1,14 +1,19 @@
 # Graph Report - readerblox  (2026-10-16)
 
 ## Corpus Check
-- 106 files · ~329,584 words
+- 107 files · ~337,152 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 8 file(s) not represented in the graph (top: .css 3, (none) 2, .csv 2)
+- Unclassified: 7 file(s) not represented in the graph (top: .css 3, (none) 2, .csv 2)
 
 ## Summary
-- 1210 nodes · 1983 edges · 92 communities (81 shown, 11 thin omitted)
+- 1212 nodes · 1987 edges · 90 communities (77 shown, 13 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `92281696`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - ui.tsx
@@ -18,7 +23,7 @@
 - compilerOptions
 - schema.sql
 - data.ts
-- zip.ts
+- Page
 - Recon map: ZonaTMO (zonatmo.org) → readerblox
 - Test plan: readerblox
 - brandkit/SKILL.md
@@ -55,7 +60,7 @@
 - Tells — the dated registry
 - Type
 - edit-profile.tsx
-- devDependencies
+- cdp.mjs
 - Words
 - 10. REFERENCE VOCABULARY (Pattern Names the Agent Should Know)
 - tasteskill: Anti-Slop Frontend Skill
@@ -76,16 +81,14 @@
 - 33. CATEGORY-SPECIFIC BIAS
 - 13. COLOR & MATERIAL RULES
 - 4. HERO MINIMALISM RULES
-- ref_node_fs
+- rules.mjs
 - 29. ANTI-AI-SLOP RULES
 - 5. IMAGE COUNT & PAGE SLICING
-- dependencies
 - 0. BRIEF INFERENCE (Read the Room Before Anything Else)
 - 12. THE BLOCK LIBRARY (Contract - Implementations Land Here Iteratively)
 - 5. CONTEXT-AWARE PROACTIVITY
 - 8. DARK MODE PROTOCOL
 - 21. MOBILE ANTI-AI-TELLS RULE
-- scripts
 - 7. DIAL DEFINITIONS (Technical Reference)
 - 33. DEFAULT SECTION PACKS
 - 14. HERO MINIMALISM RULES
@@ -124,19 +127,19 @@
 ## Import Cycles
 - None detected.
 
-## Communities (92 total, 11 thin omitted)
+## Communities (90 total, 13 thin omitted)
 
 ### Community 0 - "ui.tsx"
 Cohesion: 0.07
-Nodes (107): Library(), SORTS, History(), Row, Card, Full, ListPage(), ListRow (+99 more)
+Nodes (106): Library(), SORTS, History(), Row, Card, Full, ListPage(), ListRow (+98 more)
 
 ### Community 1 - "package.json"
-Cohesion: 0.14
-Nodes (13): eslintConfig, name, private, version, eslint, eslint-config-next, react-dom, tailwindcss (+5 more)
+Cohesion: 0.05
+Nodes (42): eslintConfig, expandFiles(), ext(), isZip(), MIME, png, dependencies, fflate (+34 more)
 
 ### Community 2 - "layout.tsx"
-Cohesion: 0.09
-Nodes (29): geist, metadata, RootLayout(), viewport, Ask, Feedback(), ToastItem, toneOf (+21 more)
+Cohesion: 0.08
+Nodes (31): geist, metadata, RootLayout(), viewport, Ask, Feedback(), ToastItem, toneOf (+23 more)
 
 ### Community 3 - "assets.mjs"
 Cohesion: 0.07
@@ -151,12 +154,8 @@ Cohesion: 0.24
 Nodes (15): chapter_reads, chapters, comments, genres, handle_new_user(), library_entries, list_items, lists (+7 more)
 
 ### Community 6 - "data.ts"
-Cohesion: 0.27
-Nodes (7): env, firstPublishedChapter(), firstPublishedTitle(), get(), SUPABASE_KEY, SUPABASE_URL, @axe-core/playwright
-
-### Community 7 - "zip.ts"
-Cohesion: 0.27
-Nodes (6): expandFiles(), ext(), isZip(), MIME, png, fflate
+Cohesion: 0.18
+Nodes (9): env, firstPublishedChapter(), firstPublishedTitle(), get(), SUPABASE_KEY, SUPABASE_URL, env, h (+1 more)
 
 ### Community 8 - "Recon map: ZonaTMO (zonatmo.org) → readerblox"
 Cohesion: 0.18
@@ -215,8 +214,8 @@ Cohesion: 0.06
 Nodes (30): 10. FINAL PRE-FLIGHT CHECK, 1. ACTIVE BASELINE CONFIGURATION, 2. DEFAULT ARCHITECTURE & CONVENTIONS, 3. DESIGN ENGINEERING DIRECTIVES (Bias Correction), 4. CREATIVE PROACTIVITY (Anti-Slop Implementation), 5. PERFORMANCE GUARDRAILS, 6. TECHNICAL REFERENCE (Dial Definitions), 7. AI TELLS (Forbidden Patterns) (+22 more)
 
 ### Community 28 - "inspect.mjs"
-Cohesion: 0.06
-Nodes (21): allow, args, asJson, fails, HEIGHT, merged, outDir, report (+13 more)
+Cohesion: 0.10
+Nodes (12): allow, args, asJson, fails, HEIGHT, merged, outDir, report (+4 more)
 
 ### Community 29 - "Appendix B - Canonical Sources (read these before reinventing)"
 Cohesion: 0.09
@@ -293,10 +292,6 @@ Nodes (10): 1. What the study measured, 2. The scale: few sizes, far apart, 3. S
 ### Community 47 - "edit-profile.tsx"
 Cohesion: 0.24
 Nodes (14): AtIcon(), AvatarHeader(), BackIcon(), CameraIcon(), EditProfileScreen(), FieldProps, initials(), Kind (+6 more)
-
-### Community 48 - "devDependencies"
-Cohesion: 0.18
-Nodes (11): devDependencies, @axe-core/playwright, eslint, eslint-config-next, @playwright/test, tailwindcss, @tailwindcss/turbopack, @types/node (+3 more)
 
 ### Community 49 - "Words"
 Cohesion: 0.20
@@ -378,9 +373,9 @@ Nodes (7): 13. COLOR & MATERIAL RULES, Background Confidence Rule, Background-im
 Cohesion: 0.29
 Nodes (7): 4. HERO MINIMALISM RULES, Absolute Hero Rules, Graphic Restraint, Headline Rule, Hero Composition Bias, Pre-output check, Typography Execution
 
-### Community 70 - "ref_node_fs"
-Cohesion: 0.33
-Nodes (3): env, h, @playwright/test
+### Community 70 - "rules.mjs"
+Cohesion: 0.53
+Nodes (5): colourFamily(), hexToHsl(), inRange(), judge(), RULE_IDS
 
 ### Community 71 - "29. ANTI-AI-SLOP RULES"
 Cohesion: 0.33
@@ -389,10 +384,6 @@ Nodes (6): 29. ANTI-AI-SLOP RULES, Content slop, Density slop, Layout slop, Typo
 ### Community 72 - "5. IMAGE COUNT & PAGE SLICING"
 Cohesion: 0.33
 Nodes (6): 5. IMAGE COUNT & PAGE SLICING, Continuity Rule, Counting rule, Format, Section size variety, THIS IS THE PRIMARY OUTPUT RULE
-
-### Community 73 - "dependencies"
-Cohesion: 0.33
-Nodes (6): dependencies, fflate, next, react, react-dom, @supabase/supabase-js
 
 ### Community 74 - "0. BRIEF INFERENCE (Read the Room Before Anything Else)"
 Cohesion: 0.40
@@ -413,10 +404,6 @@ Nodes (5): 8.A Token Strategy (pick one, stick to it), 8.B Do Not Prescribe Spec
 ### Community 78 - "21. MOBILE ANTI-AI-TELLS RULE"
 Cohesion: 0.40
 Nodes (5): 21. MOBILE ANTI-AI-TELLS RULE, Copy AI tells, Layout AI tells, UI clutter tells, Visual AI tells
-
-### Community 79 - "scripts"
-Cohesion: 0.40
-Nodes (5): scripts, build, dev, lint, start
 
 ### Community 80 - "7. DIAL DEFINITIONS (Technical Reference)"
 Cohesion: 0.50
@@ -453,22 +440,22 @@ Nodes (4): 20. EXAMPLE INTERPRETATIONS, Example 1, Example 2, Example 3
 ## Knowledge Gaps
 - **7 isolated node(s):** `react-dom`, `@tailwindcss/turbopack`, `@types/node`, `@types/react`, `@types/react-dom` (+2 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 801 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `@playwright/test` connect `ref_node_fs` to `package.json`, `data.ts`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+- **Why does `@playwright/test` connect `data.ts` to `package.json`?**
+  _High betweenness centrality (0.071) - this node is a cross-community bridge._
 - **What connects `react-dom`, `@tailwindcss/turbopack`, `@types/node` to the rest of the system?**
   _7 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ui.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06811805633486702 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06892230576441102 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `ui.tsx` to `package.json`, `layout.tsx`, `edit-profile.tsx`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04591836734693878 - nodes in this community are weakly interconnected._
 - **Why does `next` connect `ui.tsx` to `package.json`, `layout.tsx`?**
   _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Should `layout.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.08558558558558559 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07948717948717948 - nodes in this community are weakly interconnected._
