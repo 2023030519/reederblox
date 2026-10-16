@@ -1,0 +1,40 @@
+/* Tailwind v4 theme mapping: bg-surface text-fg text-muted border-line bg-accent-soft text-info ... */
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-line: var(--c-border);
+  --color-field: var(--c-border-input);
+  --color-fg: var(--c-text);
+  --color-muted: var(--c-text-muted);
+  --color-accent: var(--c-accent);
+  --color-on-accent: var(--c-on-accent);
+  --color-danger: var(--c-danger);
+  --color-success: var(--c-success);
+  --color-warning: var(--c-warning);
+  --color-info: var(--c-info);
+  --color-pink: var(--c-pink);
+  --color-teal: var(--c-teal);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-info-soft: var(--c-info-soft);
+  --color-success-soft: var(--c-success-soft);
+  --color-warning-soft: var(--c-warning-soft);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-pink-soft: var(--c-pink-soft);
+  --color-teal-soft: var(--c-teal-soft);
+  --color-chip-manga: var(--chip-manga);
+  --color-chip-manhwa: var(--chip-manhwa);
+  --color-chip-manhua: var(--chip-manhua);
+  --color-chip-webtoon: var(--chip-webtoon);
+  --color-chip-novel: var(--chip-novel);
+  --color-chip-comic: var(--chip-comic);
+  --color-chip-oneshot: var(--chip-oneshot);
+  --font-sans: var(--f-sans);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --shadow-card: var(--sh-card);
+  --shadow-pop: var(--sh-pop);
+}

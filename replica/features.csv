@@ -1,0 +1,35 @@
+feature,area,priority,original,clone,notes
+Directory with grid of title cards,browse,must,yes,yes,verified in browser
+Filters: type/demography/status/genres/exclude/author,browse,must,yes,partial,type+demography+status+one genre; no exclude-genres or author
+Search by title/author,browse,must,yes,partial,title only
+Sort (likes/alpha/score/created/release/chapters) ASC-DESC,browse,should,yes,partial,newest and A-Z only
+Title page with synopsis/genres/status/score,title,must,yes,partial,no score yet (ratings not built)
+Chapter list with read marks,title,must,yes,yes,verified (checkbox state follows reads)
+Mark all / unmark all read,title,should,yes,partial,built
+Chapter reader,reader,must,yes,partial,strip + paged modes; no fit options
+Auto-mark chapter seen on open,reader,must,yes,yes,verified (history + pending)
+Dark mode,ui,should,yes,partial,system + toggle
+Register/login,account,must,yes,yes,verified; sign-up flow itself untested
+Follow statuses (6),library,must,yes,yes,verified
+Pending chapters on home,library,must,yes,yes,verified
+Reading history,library,should,yes,yes,verified
+Public/private profile,account,skip,yes,skip,all profiles public (friends only)
+Lists (create/public-private),social,should,yes,partial,built; follow-a-list dropped
+Ratings,social,should,yes,no,
+Comments (plain text),social,could,yes,no,reactions dropped
+Report title/content,moderation,skip,yes,skip,friends-only; you moderate in the Supabase dashboard
+Home: continue reading/latest chapters/new titles,discovery,should,yes,yes,verified
+Creator profile (replaces groups),creator,must,yes,partial,/u/[username] with bio + works; no avatar
+Upload chapter (JPG/PNG/WebP/ZIP),creator,must,yes,yes,happy path verified; ZIP import unit-tested; failure cleanup untested
+Create title as creator,creator,must,yes,yes,verified
+Edit/delete own uploads,creator,must,yes,partial,built
+Share buttons,social,skip,yes,skip,not needed at 20-30 users
+Related titles,title,could,yes,no,
+Android APK,platform,must,unknown,no,user requirement
+Adult content gating (+18),policy,could,yes,no,v1 out of scope
+Scanlated/licensed catalogue,content,skip,yes,skip,not owned; replaced by creator uploads
+Hentai / AnimeTMO sibling sites,content,skip,yes,skip,out of scope
+Telegram chat / recruiting board,community,skip,yes,skip,not core
+Offline reading (download chapters),reader,could,no,yes,yours not in the original; IndexedDB copy + service worker; tested with network cut
+Colour-coded labels (type/status/demography),ui,could,no,yes,yours not in the original
+Toasts and confirm dialogs,ui,could,no,yes,yours not in the original

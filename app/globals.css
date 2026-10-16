@@ -1,0 +1,118 @@
+/* Tailwind v4 theme mapping: bg-surface text-fg text-muted border-line bg-accent-soft text-info ... */
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-line: var(--c-border);
+  --color-field: var(--c-border-input);
+  --color-fg: var(--c-text);
+  --color-muted: var(--c-text-muted);
+  --color-accent: var(--c-accent);
+  --color-on-accent: var(--c-on-accent);
+  --color-danger: var(--c-danger);
+  --color-success: var(--c-success);
+  --color-warning: var(--c-warning);
+  --color-info: var(--c-info);
+  --color-pink: var(--c-pink);
+  --color-teal: var(--c-teal);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-info-soft: var(--c-info-soft);
+  --color-success-soft: var(--c-success-soft);
+  --color-warning-soft: var(--c-warning-soft);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-pink-soft: var(--c-pink-soft);
+  --color-teal-soft: var(--c-teal-soft);
+  --color-chip-manga: var(--chip-manga);
+  --color-chip-manhwa: var(--chip-manhwa);
+  --color-chip-manhua: var(--chip-manhua);
+  --color-chip-webtoon: var(--chip-webtoon);
+  --color-chip-novel: var(--chip-novel);
+  --color-chip-comic: var(--chip-comic);
+  --color-chip-oneshot: var(--chip-oneshot);
+  --font-sans: var(--f-sans);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --shadow-card: var(--sh-card);
+  --shadow-pop: var(--sh-pop);
+}
+
+body { background: var(--c-bg); color: var(--c-text); font-family: var(--f-sans); }
+:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+html { scroll-behavior: smooth; }
+::selection { background: var(--c-accent); color: var(--c-on-accent); }
+
+/* ---- motion ---- */
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes stripes { to { background-position: 1.5rem 0; } }
+
+.anim-page { animation: fade-up var(--motion-slow) var(--motion-ease) both; }
+.anim-pop { animation: pop var(--motion-base) var(--motion-ease) both; }
+.anim-fade { animation: fade-in var(--motion-slow) ease both; }
+.anim-toast { animation: toast-in var(--motion-base) var(--motion-ease) both; }
+/* children appear one after another (grids, lists) */
+.stagger > * { animation: fade-up var(--motion-slow) var(--motion-ease) both; }
+.stagger > :nth-child(2) { animation-delay: 40ms; } .stagger > :nth-child(3) { animation-delay: 80ms; }
+.stagger > :nth-child(4) { animation-delay: 120ms; } .stagger > :nth-child(5) { animation-delay: 160ms; }
+.stagger > :nth-child(6) { animation-delay: 200ms; } .stagger > :nth-child(7) { animation-delay: 240ms; }
+.stagger > :nth-child(8) { animation-delay: 280ms; } .stagger > :nth-child(9) { animation-delay: 320ms; }
+.stagger > :nth-child(n+10) { animation-delay: 360ms; }
+.skeleton { background: linear-gradient(90deg, var(--c-surface) 25%, var(--c-border) 50%, var(--c-surface) 75%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+.bar-busy { background-image: linear-gradient(45deg, rgb(255 255 255 / .25) 25%, transparent 25%, transparent 50%, rgb(255 255 255 / .25) 50%, rgb(255 255 255 / .25) 75%, transparent 75%); background-size: 1.5rem 1.5rem; animation: stripes .8s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Form controls don't inherit text colour by default; without this they stay black on the dark theme. */
+:root { color-scheme: light dark; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"], :root[data-theme="midnight"], :root[data-theme="amoled"] { color-scheme: dark; }
+:root[data-theme="sepia"] { color-scheme: light; }
+input, select, textarea, button { font: inherit; }
+input, select, textarea { color: var(--c-text); }
+input::placeholder, textarea::placeholder { color: var(--c-text-muted); opacity: 1; }
+
+
+
+/* Accent choices. light-dark() follows color-scheme, so each pair works in both themes. */
+:root, :root[data-accent="rose"] { --c-accent: light-dark(#be123c, #fb7185); --c-on-accent: light-dark(#fff, #2a0610); --c-accent-soft: light-dark(#ffe4ea, #3a0f1a); }
+:root[data-accent="orange"] { --c-accent: light-dark(#c2410c, #fb923c); --c-on-accent: light-dark(#fff, #2b1100); --c-accent-soft: light-dark(#ffedd5, #3a1c08); }
+:root[data-accent="emerald"] { --c-accent: light-dark(#047857, #34d399); --c-on-accent: light-dark(#fff, #04241a); --c-accent-soft: light-dark(#d1fae5, #0b2e22); }
+:root[data-accent="blue"] { --c-accent: light-dark(#0369a1, #38bdf8); --c-on-accent: light-dark(#fff, #06202e); --c-accent-soft: light-dark(#e0f2fe, #0c2a3d); }
+:root[data-accent="violet"] { --c-accent: light-dark(#6d28d9, #a78bfa); --c-on-accent: light-dark(#fff, #1a0a3a); --c-accent-soft: light-dark(#ede9fe, #23164a); }
+:root[data-accent="zinc"] { --c-accent: light-dark(#3f3f46, #e4e4e7); --c-on-accent: light-dark(#fff, #18181b); --c-accent-soft: light-dark(#e4e4e7, #2a2a2e); }
+
+/* Logo name hides when scrolled; opens on hover/focus. */
+.logo-name { display: grid; grid-template-columns: 1fr; transition: grid-template-columns var(--motion-base) var(--motion-ease), opacity var(--motion-base) ease; }
+.logo-name > span { overflow: hidden; white-space: nowrap; }
+.logo-collapsed .logo-name { grid-template-columns: 0fr; opacity: 0; }
+.logo-collapsed:hover .logo-name, .logo-collapsed:focus-visible .logo-name { grid-template-columns: 1fr; opacity: 1; }
+
+/* Genre chips: tinted fill + same-hue border, readable text in both themes. One place: lib/tags.ts maps genre -> class. */
+.genre-chip { background: color-mix(in srgb, var(--g) 16%, transparent); border: 1px solid color-mix(in srgb, var(--g) 38%, transparent); color: var(--gt); }
+.g-red { --g: #ef4444; --gt: light-dark(#991b1b, #fecaca); }
+.g-orange { --g: #f97316; --gt: light-dark(#9a3412, #fed7aa); }
+.g-amber { --g: #f59e0b; --gt: light-dark(#92400e, #fde68a); }
+.g-green { --g: #22c55e; --gt: light-dark(#166534, #bbf7d0); }
+.g-teal { --g: #14b8a6; --gt: light-dark(#115e59, #99f6e4); }
+.g-sky { --g: #0ea5e9; --gt: light-dark(#075985, #bae6fd); }
+.g-violet { --g: #8b5cf6; --gt: light-dark(#5b21b6, #ddd6fe); }
+.g-pink { --g: #ec4899; --gt: light-dark(#9d174d, #fbcfe8); }
+.g-slate { --g: #94a3b8; --gt: light-dark(#334155, #e2e8f0); }
+.g-neutral { --g: #a1a1aa; --gt: light-dark(#3f3f46, #e4e4e7); }
+:root[data-accent="navy"] { --c-accent: light-dark(#0a0e1e, #aab4d4); --c-on-accent: light-dark(#fff, #0a0e1e); --c-accent-soft: light-dark(#e3e6f1, #1a2038); }
+
+:root[data-accent="pink"] { --c-accent: light-dark(#be185d, #f472b6); --c-on-accent: light-dark(#fff, #2d0518); --c-accent-soft: light-dark(#fce7f3, #3a0f26); }
+:root[data-accent="amber"] { --c-accent: light-dark(#b45309, #fbbf24); --c-on-accent: light-dark(#fff, #2b1a00); --c-accent-soft: light-dark(#fef3c7, #3a2a0a); }
+:root[data-accent="teal"] { --c-accent: light-dark(#0f766e, #2dd4bf); --c-on-accent: light-dark(#fff, #042421); --c-accent-soft: light-dark(#ccfbf1, #0f3331); }
+:root[data-accent="indigo"] { --c-accent: light-dark(#4338ca, #818cf8); --c-on-accent: light-dark(#fff, #12104a); --c-accent-soft: light-dark(#e0e7ff, #1e1b4b); }
+
+/* The app draws its own pull-to-refresh; stop the browser's native one from fighting it. */
+html, body { overscroll-behavior-y: contain; }

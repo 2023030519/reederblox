@@ -1,0 +1,113 @@
+:root {
+  --c-bg: #ffffff;
+  --c-surface: #f6f7f9;
+  --c-border: #e3e6ea;
+  --c-border-input: #868e98;
+  --c-text: #14171c;
+  --c-text-muted: #5b6470;
+  --c-accent: #5b46d6;
+  --c-on-accent: #ffffff;
+  --c-danger: #c62f2f;
+  --c-success: #1f7a4d;
+  --c-warning: #8a5a00;
+  --c-accent-soft: #ece9fb;
+  --c-info: #1d5fb8;
+  --c-info-soft: #e3eefb;
+  --c-success-soft: #e2f4ea;
+  --c-warning-soft: #fdf0d5;
+  --c-danger-soft: #fbe6e6;
+  --c-pink: #b02a6b;
+  --c-pink-soft: #fbe5f0;
+  --c-teal: #0e7573;
+  --c-teal-soft: #ddf3f1;
+}
+@media (prefers-color-scheme: dark) {
+:root:not([data-theme="light"]) {
+  --c-bg: #111318;
+  --c-surface: #1b1e25;
+  --c-border: #2b3039;
+  --c-border-input: #7d8794;
+  --c-text: #eceef2;
+  --c-text-muted: #a3abb8;
+  --c-accent: #a99cff;
+  --c-on-accent: #14102b;
+  --c-danger: #ff8080;
+  --c-success: #5fd39a;
+  --c-warning: #f0b44c;
+  --c-accent-soft: #272255;
+  --c-info: #8ec1ff;
+  --c-info-soft: #14263d;
+  --c-success-soft: #12301f;
+  --c-warning-soft: #3a2a0a;
+  --c-danger-soft: #3b1618;
+  --c-pink: #ff9cc8;
+  --c-pink-soft: #3b1527;
+  --c-teal: #5fd6d1;
+  --c-teal-soft: #0f3331;
+}
+}
+:root[data-theme="dark"] {
+  --c-bg: #111318;
+  --c-surface: #1b1e25;
+  --c-border: #2b3039;
+  --c-border-input: #7d8794;
+  --c-text: #eceef2;
+  --c-text-muted: #a3abb8;
+  --c-accent: #a99cff;
+  --c-on-accent: #14102b;
+  --c-danger: #ff8080;
+  --c-success: #5fd39a;
+  --c-warning: #f0b44c;
+  --c-accent-soft: #272255;
+  --c-info: #8ec1ff;
+  --c-info-soft: #14263d;
+  --c-success-soft: #12301f;
+  --c-warning-soft: #3a2a0a;
+  --c-danger-soft: #3b1618;
+  --c-pink: #ff9cc8;
+  --c-pink-soft: #3b1527;
+  --c-teal: #5fd6d1;
+  --c-teal-soft: #0f3331;
+}
+:root {
+  --chip-manga: #5b46d6;
+  --chip-manhwa: #1d5fb8;
+  --chip-manhua: #b02a6b;
+  --chip-webtoon: #0e7573;
+  --chip-novel: #8a5a00;
+  --chip-comic: #c62f2f;
+  --chip-oneshot: #1f7a4d;
+  --f-sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --f-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-xs: 12px/16px;
+  --weight-xs: 500;
+  --text-sm: 14px/20px;
+  --weight-sm: 400;
+  --text-base: 16px/24px;
+  --weight-base: 400;
+  --text-lg: 20px/28px;
+  --weight-lg: 600;
+  --text-xl: 28px/34px;
+  --weight-xl: 700;
+  --text-display: 40px/44px;
+  --weight-display: 700;
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+  --sh-card: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.10);
+  --sh-pop: 0 12px 32px rgba(16,24,40,.16);
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 400ms;
+  --motion-ease: cubic-bezier(.2,.8,.2,1);
+}
