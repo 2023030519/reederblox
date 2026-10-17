@@ -70,7 +70,7 @@ export default function Downloads() {
       ? supabase.from("chapter_reads").upsert({ user_id: user.id, chapter_id: cid })
       : supabase.from("chapter_reads").delete().eq("user_id", user.id).eq("chapter_id", cid);
     const { error } = await q;
-    if (error) return toast("No se pudo actualizar (¿sin conexión?)", "danger");
+    if (error) return toast("No se pudo actualizar", "danger");
     setRead((s) => { const n = new Set(s); if (on) n.add(cid); else n.delete(cid); return n; });
   };
 

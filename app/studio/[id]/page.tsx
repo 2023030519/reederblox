@@ -177,7 +177,7 @@ export default function StudioTitle() {
             <li key={c.id}>
               <div className="flex items-center gap-3 rounded-lg px-2 py-1 transition hover:bg-surface">
                 <span className="w-8 shrink-0 text-right font-mono text-sm text-muted">{c.number}</span>
-                <Link href={`/read/${c.id}`} className={`min-w-0 flex-1 truncate py-2.5 ${c.is_published ? "font-semibold" : "text-muted"}`}>
+                <Link href={`/read/${c.id}?from=studio`} className={`min-w-0 flex-1 truncate py-2.5 ${c.is_published ? "font-semibold" : "text-muted"}`}>
                   {c.name || `Capítulo ${c.number}`} {!c.is_published && <Badge tone="warning">Borrador</Badge>}
                 </Link>
                 {c.published_at && <time className="shrink-0 font-mono text-xs text-muted" dateTime={c.published_at}>{new Date(c.published_at).toLocaleDateString("es", { day: "2-digit", month: "2-digit", year: "2-digit" })}</time>}

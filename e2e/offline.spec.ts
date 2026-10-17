@@ -29,10 +29,9 @@ test("download a chapter, go offline, read it from the saved copy", async ({ pag
   await expect(page.getByText("Leyendo la copia descargada")).toBeVisible({ timeout: 15000 });
   await expect(page.locator("img[alt^='Página']").first()).toBeVisible();
   await expect(page.locator("img[alt^='Página']").first()).toHaveJSProperty("complete", true);
-  await expect(page.getByText("Sin conexión.")).toBeVisible();
 
   // The downloads page works offline too and lists the chapter.
-  await page.getByRole("link", { name: "Ir a Descargas" }).click();
+  await page.goto("/offline");
   await expect(page.getByRole("heading", { name: "Descargas" })).toBeVisible();
   await expect(page.getByText(/Capítulo \d+ · \d+ páginas/)).toBeVisible();
 

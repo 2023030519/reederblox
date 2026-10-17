@@ -1,0 +1,5 @@
+# Una URL por línea: la página de la novela donde salen los capítulos.
+# Las líneas vacías o que empiezan con # se ignoran.
+# https://ejemplo.com/novela-1
+https://lectortmo.vip/manga/solo-leveling/
+https://lectortmo.vip/manga/berserk/

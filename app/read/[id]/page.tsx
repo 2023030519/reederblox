@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useFetch, useMe, ok } from "@/lib/hooks";
 import { supabase, mediaUrl, type Chapter } from "@/lib/supabase";
@@ -34,6 +34,8 @@ export default function Reader() {
   const { id } = useParams<{ id: string }>();
   const { user } = useMe();
   const router = useRouter();
+  const fromStudio = useSearchParams().get("from") === "studio"; // opened from the Studio table
+  const q = fromStudio ? "?from=studio" : "";
   const [paged, setPaged] = useState(false);
   const [i, setI] = useState(0);
   const root = useRef<HTMLDivElement>(null);
@@ -100,6 +102,7 @@ export default function Reader() {
   const { chapter, title, pages, siblings } = d.data;
   const at = siblings.findIndex((s) => s.id === id);
   const prev = siblings[at - 1], next = siblings[at + 1];
+  const back = fromStudio ? `/studio/${chapter.title_id}` : `/title/${title.slug}`;
 
   // Show the toolbar, then hide it BAR_MS after the last scroll.
   const reveal = () => {
@@ -135,19 +138,19 @@ export default function Reader() {
         <div role="toolbar" aria-label="Herramientas del lector" onPointerEnter={() => pin(true)} onPointerLeave={() => pin(false)} onFocus={() => pin(true)} onBlur={() => pin(false)}
           className="w-full max-w-md space-y-2 rounded-3xl border border-line bg-bg/90 p-2.5 shadow-pop backdrop-blur">
           <div className="flex items-center gap-2">
-            <Link href={`/title/${title.slug}`} aria-label="Volver a la obra" className="flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-surface active:scale-95">
+            <Link href={back} aria-label={fromStudio ? "Volver al Estudio" : "Volver a la obra"} className="flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-surface active:scale-95">
               <svg aria-hidden viewBox="0 0 24 24" className="size-5 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.75]"><path d="M4 11.5 12 5l8 6.5M6 10v9h4v-5h4v5h4v-9" /></svg>
             </Link>
-            <Link href={`/title/${title.slug}`} className="min-w-0 flex-1 truncate text-sm font-semibold">{title.name}</Link>
+            <Link href={back} className="min-w-0 flex-1 truncate text-sm font-semibold">{title.name}</Link>
                         <button type="button" onClick={() => setPaged(!paged)} className="shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-muted transition hover:bg-surface">{paged ? "Modo tira" : "Modo páginas"}</button>
           </div>
           <div className="flex items-center gap-2">
-            {prev ? <Link href={`/read/${prev.id}`} aria-label="Capítulo anterior" className={`${step} hover:bg-surface`}>‹</Link> : <span aria-hidden className={`${step} opacity-30`}>‹</span>}
-            <select aria-label="Capítulo" value={id} onChange={(e) => router.push(`/read/${e.target.value}`)}
+            {prev ? <Link href={`/read/${prev.id}${q}`} aria-label="Capítulo anterior" className={`${step} hover:bg-surface`}>‹</Link> : <span aria-hidden className={`${step} opacity-30`}>‹</span>}
+            <select aria-label="Capítulo" value={id} onChange={(e) => router.push(`/read/${e.target.value}${q}`)}
               className="h-11 min-w-0 flex-1 rounded-xl border border-field bg-bg px-3 text-sm font-semibold">
               {[...siblings].reverse().map((s) => <option key={s.id} value={s.id}>Capítulo {s.number}{s.id === chapter.id && chapter.name ? ` · ${chapter.name}` : ""}</option>)}
             </select>
-            {next ? <Link href={`/read/${next.id}`} aria-label="Capítulo siguiente" className={`${step} hover:bg-surface`}>›</Link> : <span aria-hidden className={`${step} opacity-30`}>›</span>}
+            {next ? <Link href={`/read/${next.id}${q}`} aria-label="Capítulo siguiente" className={`${step} hover:bg-surface`}>›</Link> : <span aria-hidden className={`${step} opacity-30`}>›</span>}
           </div>
         </div>
       </div>

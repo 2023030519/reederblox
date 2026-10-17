@@ -43,3 +43,8 @@ next-env.d.ts
 .vercel
 .env*
 /test-results
+
+# WebToEpub automation: copied extension, browser profile and results
+/tools/webtoepub/extension
+/tools/webtoepub/profile
+/tools/webtoepub/out
