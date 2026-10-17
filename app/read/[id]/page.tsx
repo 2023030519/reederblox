@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useFetch, useMe, ok } from "@/lib/hooks";
 import { supabase, mediaUrl, type Chapter } from "@/lib/supabase";
 import { getSaved, savedIds, type SavedChapter } from "@/lib/offline";
@@ -30,6 +30,8 @@ async function fromCopy(s: SavedChapter): Promise<Data> {
 }
 
 const BAR_MS = 3000; // toolbar stays this long after the last scroll
+const MAX_ZOOM = 4;
+const dist = (t: React.TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
 
 export default function Reader() {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +48,10 @@ export default function Reader() {
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const asked = useRef<string | null>(null); // chapter whose checkpoint we already looked up
   const checked = useRef<string | null>(null); // ...and got an answer for: only then may we overwrite it
+  // Our own zoom: the browser's pinch zoom is off in real fullscreen (and disabled here with touch-action so they don't stack).
+  const [zoom, setZoom] = useState(1);
+  const pinch = useRef<{ d: number; z: number } | null>(null);
+  const focus = useRef<{ x: number; y: number; left: number; top: number; k: number } | null>(null);
 
   const d = useFetch<Data | null>(async () => {
     try {
@@ -90,6 +96,22 @@ export default function Reader() {
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const total = d.data?.pages.length ?? 0;
+
+  // Zoom to z keeping the point (x, y) of the screen in place.
+  const zoomTo = (z: number, x = innerWidth / 2, y = innerHeight / 2) => {
+    z = Math.min(MAX_ZOOM, Math.max(1, z));
+    const el = root.current;
+    if (!el || z === zoom) return;
+    focus.current = { x, y, left: el.scrollLeft, top: el.scrollTop, k: z / zoom };
+    setZoom(z);
+  };
+  useLayoutEffect(() => {
+    const el = root.current, f = focus.current;
+    if (!el || !f) return;
+    el.scrollLeft = (f.left + f.x) * f.k - f.x;
+    el.scrollTop = (f.top + f.y) * f.k - f.y;
+    focus.current = null;
+  }, [zoom]);
 
   // Page under the middle of the screen in strip mode (0-based).
   const stripAt = () => {
@@ -150,15 +172,23 @@ export default function Reader() {
   };
   const pin = (on: boolean) => { pinned.current = on; if (on) { clearTimeout(timer.current); setShowBar(true); } else reveal(); };
 
+  const zoomed = zoom > 1 ? { width: Math.min(800, innerWidth) * zoom, maxWidth: "none" } : undefined;
   const step = "flex size-11 shrink-0 items-center justify-center rounded-xl border border-line text-2xl leading-none transition active:scale-95";
 
   return (
     <div ref={root} data-scroller onScroll={() => { reveal(); if (!paged) checkpoint(); }} onClick={() => { if (!paged) reveal(); }}
-      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-bg">
+      onTouchStart={(e) => { if (e.touches.length === 2) pinch.current = { d: dist(e.touches), z: zoom }; }}
+      onTouchMove={(e) => {
+        if (!pinch.current || e.touches.length !== 2) return;
+        const t = e.touches;
+        zoomTo(pinch.current.z * dist(t) / pinch.current.d, (t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2);
+      }}
+      onTouchEnd={(e) => { if (e.touches.length < 2) pinch.current = null; }}
+      className="fixed inset-0 z-50 touch-pan-x touch-pan-y overflow-auto overscroll-contain bg-bg">
       {d.data.fromCopy && <div className="mx-auto max-w-[800px] p-3"><Callout tone="info" title="Leyendo la copia descargada">Esta versión está guardada en tu dispositivo. Si el autor la actualizó, vuelve a descargarla con conexión.</Callout></div>}
       {pages.length === 0 && <div className="p-6"><Empty>Este capítulo todavía no tiene páginas.</Empty></div>}
       {paged && pages.length > 0 ? (
-        <div className="mx-auto w-full max-w-[800px]">
+        <div className="mx-auto w-full max-w-[800px]" style={zoomed}>
           {/* Tap the left third to go back, the rest to go on. */}
           <div onClick={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
@@ -169,7 +199,7 @@ export default function Reader() {
           {pages[i + 1] && <link rel="preload" as="image" href={pages[i + 1].src} />}
         </div>
       ) : (
-        <div className="mx-auto flex w-full max-w-[800px] flex-col pb-28">{pages.map((p) => <Img key={p.key} p={p} />)}</div>
+        <div className="mx-auto flex w-full max-w-[800px] flex-col pb-28" style={zoomed}>{pages.map((p) => <Img key={p.key} p={p} />)}</div>
       )}
 
       <div className={`fixed inset-x-0 bottom-0 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition duration-300 ${showBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"}`}>
@@ -181,6 +211,11 @@ export default function Reader() {
             </Link>
             <Link href={back} className="min-w-0 flex-1 truncate text-sm font-semibold">{title.name}</Link>
                         <button type="button" onClick={() => { if (!paged) setI(stripAt()); setPaged(!paged); }} className="shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-muted transition hover:bg-surface">{paged ? "Modo tira" : "Modo páginas"}</button>
+          </div>
+          <div className="flex items-center justify-center gap-1 text-sm font-semibold">
+            <button type="button" aria-label="Alejar" disabled={zoom <= 1} onClick={() => zoomTo(zoom / 1.25)} className="flex size-9 items-center justify-center rounded-full text-lg transition hover:bg-surface active:scale-95 disabled:opacity-30">−</button>
+            <button type="button" aria-label="Restablecer zoom" onClick={() => zoomTo(1)} className="min-w-14 rounded-full px-2 py-1 tabular-nums transition hover:bg-surface">{Math.round(zoom * 100)}%</button>
+            <button type="button" aria-label="Acercar" disabled={zoom >= MAX_ZOOM} onClick={() => zoomTo(zoom * 1.25)} className="flex size-9 items-center justify-center rounded-full text-lg transition hover:bg-surface active:scale-95 disabled:opacity-30">+</button>
           </div>
           <div className="flex items-center gap-2">
             {prev ? <Link href={`/read/${prev.id}${q}`} aria-label="Capítulo anterior" className={`${step} hover:bg-surface`}>‹</Link> : <span aria-hidden className={`${step} opacity-30`}>‹</span>}

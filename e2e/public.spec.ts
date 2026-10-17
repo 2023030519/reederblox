@@ -91,3 +91,31 @@ test("the app is installable: manifest and icons are served", async ({ request }
   expect(m.icons.some((i: { purpose?: string }) => i.purpose === "maskable")).toBe(true);
   for (const i of m.icons) expect((await request.get(i.src)).ok(), i.src).toBe(true);
 });
+
+test("reader zoom: buttons and a two-finger pinch widen the pages", async ({ page }) => {
+  const c = await firstPublishedChapter();
+  test.skip(!c, "no published chapter with pages in the database");
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto(`/read/${c!.id}`);
+  const strip = page.locator("[data-page]").first();
+  await expect(strip).toBeVisible();
+  const w0 = (await strip.boundingBox())!.width;
+
+  await page.locator("[data-scroller]").click(); // shows the toolbar
+  await page.getByRole("button", { name: "Acercar" }).click();
+  await expect(page.getByRole("button", { name: "Restablecer zoom" })).toHaveText("125%");
+  expect((await strip.boundingBox())!.width).toBeCloseTo(w0 * 1.25, 0);
+
+  // Pinch out with two fingers (the browser's own pinch is off in real fullscreen).
+  const cdp = await page.context().newCDPSession(page);
+  const touch = (type: string, d: number) => cdp.send("Input.dispatchTouchEvent", {
+    type, touchPoints: type === "touchEnd" ? [] : [{ x: 195 - d, y: 400, id: 1 }, { x: 195 + d, y: 400, id: 2 }],
+  });
+  await touch("touchStart", 50);
+  for (const d of [70, 90, 100]) await touch("touchMove", d);
+  await touch("touchEnd", 0);
+  expect((await strip.boundingBox())!.width).toBeGreaterThan(w0 * 2);
+
+  await page.getByRole("button", { name: "Restablecer zoom" }).click();
+  expect((await strip.boundingBox())!.width).toBeCloseTo(w0, 0);
+});

@@ -66,9 +66,9 @@
     "semantic_hash": ""
   },
   "app/read/[id]/page.tsx": {
-    "mtime": 1792210717.1265376,
-    "seen": 1792210878.51537,
-    "ast_hash": "786d649f0f0b0e467e22dcbec6c965a5",
+    "mtime": 1792213017.0520694,
+    "seen": 1792213862.0703228,
+    "ast_hash": "7089a2b9334506175bd3d1408ef26870",
     "semantic_hash": ""
   },
   "app/studio/[id]/page.tsx": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "e2e/public.spec.ts": {
-    "mtime": 1792106277.5983908,
-    "seen": 1792122292.2584054,
-    "ast_hash": "63980c3a00debfa2db2677e054cbb950",
+    "mtime": 1792213781.147429,
+    "seen": 1792213862.0703778,
+    "ast_hash": "9d65913d9b71c89461e85770fdf7431e",
     "semantic_hash": ""
   },
   "e2e/rls.spec.ts": {

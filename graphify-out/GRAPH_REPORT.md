@@ -1,17 +1,17 @@
 # Graph Report - readerblox  (2026-10-16)
 
 ## Corpus Check
-- 111 files · ~339,369 words
+- 111 files · ~339,851 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 7 file(s) not represented in the graph (top: .css 3, (none) 2, .csv 2)
 
 ## Summary
-- 1243 nodes · 2036 edges · 97 communities (82 shown, 15 thin omitted)
+- 1244 nodes · 2038 edges · 97 communities (82 shown, 15 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `dfed2404`
+- Built from commit: `11531ba3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -136,15 +136,15 @@
 
 ### Community 0 - "ui.tsx"
 Cohesion: 0.07
-Nodes (107): Library(), SORTS, History(), Row, Card, Full, ListPage(), ListRow (+99 more)
+Nodes (108): Library(), SORTS, History(), Row, Card, Full, ListPage(), ListRow (+100 more)
 
 ### Community 1 - "package.json"
-Cohesion: 0.13
-Nodes (14): eslintConfig, name, private, version, @axe-core/playwright, eslint, eslint-config-next, react-dom (+6 more)
+Cohesion: 0.14
+Nodes (13): eslintConfig, name, private, version, eslint, eslint-config-next, react-dom, tailwindcss (+5 more)
 
 ### Community 2 - "layout.tsx"
 Cohesion: 0.08
-Nodes (31): geist, metadata, RootLayout(), viewport, Ask, Feedback(), ToastItem, toneOf (+23 more)
+Nodes (30): geist, metadata, RootLayout(), viewport, Ask, Feedback(), ToastItem, toneOf (+22 more)
 
 ### Community 3 - "assets.mjs"
 Cohesion: 0.07
@@ -159,8 +159,8 @@ Cohesion: 0.24
 Nodes (15): chapter_reads, chapters, comments, genres, handle_new_user(), library_entries, list_items, lists (+7 more)
 
 ### Community 6 - "data.ts"
-Cohesion: 0.26
-Nodes (7): env, firstPublishedChapter(), firstPublishedTitle(), get(), SUPABASE_KEY, SUPABASE_URL, @playwright/test
+Cohesion: 0.23
+Nodes (8): env, firstPublishedChapter(), firstPublishedTitle(), get(), SUPABASE_KEY, SUPABASE_URL, @axe-core/playwright, @playwright/test
 
 ### Community 7 - "run.mjs"
 Cohesion: 0.10
@@ -300,7 +300,7 @@ Nodes (10): 1. What the study measured, 2. The scale: few sizes, far apart, 3. S
 
 ### Community 47 - "edit-profile.tsx"
 Cohesion: 0.24
-Nodes (13): AtIcon(), AvatarHeader(), BackIcon(), CameraIcon(), EditProfileScreen(), FieldProps, initials(), Kind (+5 more)
+Nodes (14): AtIcon(), AvatarHeader(), BackIcon(), CameraIcon(), EditProfileScreen(), FieldProps, initials(), Kind (+6 more)
 
 ### Community 48 - "convert"
 Cohesion: 0.47
@@ -471,16 +471,16 @@ Nodes (5): scripts, build, dev, lint, start
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `@playwright/test` connect `data.ts` to `package.json`, `ref_node_fs`, `run.mjs`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+  _High betweenness centrality (0.071) - this node is a cross-community bridge._
 - **What connects `react-dom`, `@tailwindcss/turbopack`, `@types/node` to the rest of the system?**
   _7 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ui.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.0690158231399394 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06766169154228856 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `ui.tsx` to `package.json`, `layout.tsx`, `edit-profile.tsx`?**
-  _High betweenness centrality (0.038) - this node is a cross-community bridge._
+  _High betweenness centrality (0.039) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.13333333333333333 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._
 - **Why does `next` connect `ui.tsx` to `package.json`, `layout.tsx`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Should `layout.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.07948717948717948 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08232118758434548 - nodes in this community are weakly interconnected._
