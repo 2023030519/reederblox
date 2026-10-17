@@ -234,6 +234,8 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
   const [pct, setPct] = useState(0);
   const [drag, setDrag] = useState(false);
   const [inputKey, setInputKey] = useState(0); // remounts the file input to clear it
+  const [pdf, setPdf] = useState<{ file: File; pages: number } | null>(null);
+  const [perPart, setPerPart] = useState("100");
 
   // Object URLs for the thumbnails; revoked when the list changes.
   useEffect(() => {
@@ -242,15 +244,25 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [files]);
 
-  // Accepts images, a ZIP and/or a PDF; zips are unpacked and PDF pages rendered in the browser.
+  // Accepts images and/or a ZIP (shown as thumbnails), or one PDF (rendered page by page while uploading).
   const pick = async (picked: File[]) => {
     if (!picked.length) return;
     setError("");
     setReading(true);
     try {
-      const images = (await expandFiles(picked)).sort(byName);
-      if (!images.length) throw new Error("No encontré imágenes JPG, PNG o WebP ni páginas de PDF en lo que elegiste.");
-      setFiles(images);
+      const doc = picked.find(isPdf);
+      if (doc) {
+        if (picked.length > 1) throw new Error("Sube el PDF solo, sin otras imágenes.");
+        const reader = await (await import("@/lib/pdf")).openPdf(doc);
+        await reader.close();
+        setPdf({ file: doc, pages: reader.pages });
+        setFiles([]);
+      } else {
+        const images = (await expandFiles(picked)).sort(byName);
+        if (!images.length) throw new Error("No encontré imágenes JPG, PNG o WebP en lo que elegiste.");
+        setFiles(images);
+        setPdf(null);
+      }
       const pack = picked.find((f) => isZip(f) || isPdf(f));
       if (!number && pack) {
         const n = pack.name.replace(/\.(zip|pdf)$/i, "").match(/(\d+(?:\.\d+)?)(?!.*\d)/); // last number in the file name
@@ -262,40 +274,71 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
     setReading(false);
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!files.length) return setError("Elige imágenes, un ZIP o un PDF.");
-    setBusy(true);
-    setError("");
+  // A PDF longer than "páginas por parte" becomes consecutive chapters: Parte 1, Parte 2…
+  const size = Math.max(1, Math.floor(Number(perPart)) || 1);
+  const partCount = pdf ? Math.ceil(pdf.pages / size) : 1;
+  const totalPages = pdf ? pdf.pages : files.length;
+
+  // Creates one chapter from page renderers. On failure it removes what it sent, so there are no half chapters.
+  const uploadChapter = async (num: number, chName: string | null, pages: (() => Promise<{ blob: Blob; width: number; height: number }>)[], onPage: (i: number) => void) => {
     let chapterId: string | undefined;
     const sent: string[] = [];
     try {
-      const ch = await supabase.from("chapters").insert({ title_id: titleId, number: Number(number), name: name || null }).select("id").single();
-      if (ch.error) throw new Error(ch.error.code === "23505" ? "Ya existe un capítulo con ese número." : ch.error.message);
+      const ch = await supabase.from("chapters").insert({ title_id: titleId, number: num, name: chName }).select("id").single();
+      if (ch.error) throw new Error(ch.error.code === "23505" ? `Ya existe un capítulo con el número ${num}.` : ch.error.message);
       chapterId = ch.data.id;
       const rows = [];
-      for (const [i, f] of files.entries()) {
-        setProgress(`Subiendo ${i + 1} de ${files.length}…`);
-        setPct((i / files.length) * 100);
-        const { blob, width, height } = await toWebp(f);
+      for (const [i, render] of pages.entries()) {
+        onPage(i);
+        const { blob, width, height } = await render();
         const image_path = `${uid}/${titleId}/${chapterId}/${i + 1}.webp`;
         await upload(image_path, blob);
         sent.push(image_path);
         rows.push({ chapter_id: chapterId, position: i + 1, image_path, width, height });
       }
-      setPct(100);
       ok(await supabase.from("pages").insert(rows).select());
       if (publish) ok(await supabase.from("chapters").update({ is_published: true, published_at: new Date().toISOString() }).eq("id", chapterId).select());
-      setNumber(""); setName(""); setFiles([]); setProgress(""); setInputKey((k) => k + 1);
-      onDone();
-      toast("Capítulo subido");
     } catch (err) {
-      setError((err as Error).message);
-      toast("No se pudo subir el capítulo", "danger");
-      setProgress("");
-      // no half chapters: pages rows may not exist yet, so remove what was sent by path
+      // pages rows may not exist yet, so remove what was sent by path
       if (sent.length) await supabase.storage.from("media").remove(sent).catch(() => {});
       if (chapterId) await removeChapter(chapterId).catch(() => {});
+      throw err;
+    }
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!files.length && !pdf) return setError("Elige imágenes, un ZIP o un PDF.");
+    setBusy(true);
+    setError("");
+    let done = 0;
+    try {
+      const reader = pdf && await (await import("@/lib/pdf")).openPdf(pdf.file);
+      try {
+        for (let k = 0; k < partCount; k++) {
+          const pages = reader
+            ? Array.from({ length: Math.min(size, reader.pages - k * size) }, (_, j) => () => reader.page(k * size + j + 1))
+            : files.map((f) => () => toWebp(f));
+          const part = partCount > 1 ? `Parte ${k + 1}` : "";
+          await uploadChapter(Number(number) + k, [name, part].filter(Boolean).join(" · ") || null, pages, (i) => {
+            setProgress(`${part ? `${part} de ${partCount} · ` : ""}Subiendo ${i + 1} de ${pages.length}…`);
+            setPct(((k * size + i) / totalPages) * 100);
+          });
+          done++;
+        }
+      } finally {
+        await reader?.close();
+      }
+      setPct(100);
+      setNumber(""); setName(""); setFiles([]); setPdf(null); setProgress(""); setInputKey((k) => k + 1);
+      onDone();
+      toast(partCount > 1 ? `${partCount} capítulos subidos` : "Capítulo subido");
+    } catch (err) {
+      const msg = (err as Error).message;
+      setError(done ? `Se subieron ${done} de ${partCount} partes. Falló la parte ${done + 1}: ${msg}` : msg);
+      toast("No se pudo subir el capítulo", "danger");
+      setProgress("");
+      if (done) onDone();
     }
     setBusy(false);
   };
@@ -321,6 +364,21 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
           onChange={(e) => pick([...(e.target.files ?? [])])} />
       </label>
 
+      {pdf && (
+        <div className="space-y-3 rounded-lg border border-line bg-bg p-3">
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="min-w-0 truncate font-medium">{pdf.file.name} · {pdf.pages} páginas · {(pdf.file.size / 1e6).toFixed(1)} MB</span>
+            <button type="button" className="shrink-0 text-accent" disabled={busy} onClick={() => { setPdf(null); setInputKey((k) => k + 1); }}>Quitar</button>
+          </div>
+          <Field label="Páginas por parte"><Input required type="number" min="1" step="1" value={perPart} disabled={busy} onChange={(e) => setPerPart(e.target.value)} /></Field>
+          <p className="text-sm text-muted">
+            {partCount > 1
+              ? `Se crearán ${partCount} capítulos${number ? `, del ${number} al ${Number(number) + partCount - 1}` : ""}, llamados «Parte 1», «Parte 2»…`
+              : "Se creará un solo capítulo."}
+          </p>
+        </div>
+      )}
+
       {files.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2 text-sm">
@@ -343,12 +401,12 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
       )}
 
       <label className="flex items-center gap-2"><input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} className="size-4 accent-[var(--c-accent)]" /> Publicar al terminar</label>
-      {(files.length > 150 || files.reduce((s, f) => s + f.size, 0) > 60e6) && !busy &&
+      {(totalPages > 150 || files.reduce((s, f) => s + f.size, 0) > 60e6) && !busy &&
         <Callout tone="warning" title="Capítulo grande">Subirlo puede tardar varios minutos. Mantén esta pestaña abierta hasta que termine.</Callout>}
       {busy && <ProgressBar value={pct} label="Progreso de la subida" />}
       {error && <ErrorBox message={error} />}
       <div className="flex items-center gap-3">
-        <Button type="submit" loading={busy || reading}>Subir capítulo</Button>
+        <Button type="submit" loading={busy || reading}>{partCount > 1 ? `Subir ${partCount} capítulos` : "Subir capítulo"}</Button>
         <span role="status" className="text-sm text-muted">{progress}</span>
       </div>
     </form>

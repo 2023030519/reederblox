@@ -66,15 +66,15 @@
     "semantic_hash": ""
   },
   "app/read/[id]/page.tsx": {
-    "mtime": 1792170703.3910637,
-    "seen": 1792170949.5995612,
-    "ast_hash": "c114f1302a22896812920f637da7b810",
+    "mtime": 1792210717.1265376,
+    "seen": 1792210878.51537,
+    "ast_hash": "786d649f0f0b0e467e22dcbec6c965a5",
     "semantic_hash": ""
   },
   "app/studio/[id]/page.tsx": {
-    "mtime": 1792206983.53939,
-    "seen": 1792207136.2596426,
-    "ast_hash": "764f90679b1ebcf150bfd0ebc448d557",
+    "mtime": 1792210815.2341638,
+    "seen": 1792210878.515373,
+    "ast_hash": "78766d5c5628e7d12bfef16ad554958d",
     "semantic_hash": ""
   },
   "app/studio/page.tsx": {
@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "app/title/[slug]/page.tsx": {
-    "mtime": 1792139162.9786634,
-    "seen": 1792139182.8079798,
-    "ast_hash": "cc0a919eb1d55e57ca2e8170964eccfd",
+    "mtime": 1792210717.1275375,
+    "seen": 1792210878.5153754,
+    "ast_hash": "372617cfc163bb0fdb7969fa36d9efee",
     "semantic_hash": ""
   },
   "app/u/[username]/page.tsx": {
@@ -198,9 +198,9 @@
     "semantic_hash": ""
   },
   "lib/zip.ts": {
-    "mtime": 1792206972.0364492,
-    "seen": 1792207136.25974,
-    "ast_hash": "e1225a5de7b785ac0636d86b2c0743be",
+    "mtime": 1792210773.8656752,
+    "seen": 1792210878.5154092,
+    "ast_hash": "a034432f86bd7e5c7c940b52223a6faa",
     "semantic_hash": ""
   },
   "next.config.ts": {
@@ -210,9 +210,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1792206952.2425385,
-    "seen": 1792207136.2597466,
-    "ast_hash": "1875140feed43098d8b7b5b505e806b4",
+    "mtime": 1792210614.7256649,
+    "seen": 1792210878.515411,
+    "ast_hash": "21f24ad00091aa5a26c633d329f444e3",
     "semantic_hash": ""
   },
   "playwright.config.ts": {
@@ -726,9 +726,15 @@
     "semantic_hash": ""
   },
   "lib/pdf.ts": {
-    "mtime": 1792207058.4905632,
-    "seen": 1792207136.2597258,
-    "ast_hash": "a4b6cecbae225f3959f10521a02979e8",
+    "mtime": 1792210773.7306972,
+    "seen": 1792210878.5154047,
+    "ast_hash": "7ca8a5d45132e915985685f984c62894",
+    "semantic_hash": ""
+  },
+  "replica/migrations/003-reading-checkpoint.sql": {
+    "mtime": 1792210650.8880174,
+    "seen": 1792210878.5154207,
+    "ast_hash": "1a8d1453d984a9890973373ae7d18eaa",
     "semantic_hash": ""
   }
 }

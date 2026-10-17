@@ -1,17 +1,17 @@
 # Graph Report - readerblox  (2026-10-16)
 
 ## Corpus Check
-- 110 files · ~338,612 words
+- 111 files · ~339,369 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 7 file(s) not represented in the graph (top: .css 3, (none) 2, .csv 2)
 
 ## Summary
-- 1242 nodes · 2034 edges · 96 communities (82 shown, 14 thin omitted)
+- 1243 nodes · 2036 edges · 97 communities (82 shown, 15 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1730567a`
+- Built from commit: `dfed2404`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -102,7 +102,7 @@
 - imagegen-frontend-web/SKILL.md
 - CLAUDE.md
 - dependencies
-- zip.test.ts
+- pdf.ts
 - scripts
 
 ## God Nodes (most connected - your core abstractions)
@@ -132,7 +132,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (96 total, 14 thin omitted)
+## Communities (97 total, 15 thin omitted)
 
 ### Community 0 - "ui.tsx"
 Cohesion: 0.07
@@ -451,8 +451,8 @@ Cohesion: 0.50
 Nodes (4): 20. EXAMPLE INTERPRETATIONS, Example 1, Example 2, Example 3
 
 ### Community 89 - "zip.ts"
-Cohesion: 0.39
-Nodes (6): expandFiles(), ext(), isPdf(), isZip(), MIME, pdfjs-dist
+Cohesion: 0.26
+Nodes (7): expandFiles(), ext(), isPdf(), isZip(), MIME, png, fflate
 
 ### Community 93 - "dependencies"
 Cohesion: 0.29
@@ -464,18 +464,18 @@ Nodes (5): scripts, build, dev, lint, start
 
 ## Knowledge Gaps
 - **7 isolated node(s):** `react-dom`, `@tailwindcss/turbopack`, `@types/node`, `@types/react`, `@types/react-dom` (+2 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 820 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 821 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `@playwright/test` connect `data.ts` to `package.json`, `ref_node_fs`, `run.mjs`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
 - **What connects `react-dom`, `@tailwindcss/turbopack`, `@types/node` to the rest of the system?**
   _7 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ui.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06867916058803726 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0690158231399394 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `ui.tsx` to `package.json`, `layout.tsx`, `edit-profile.tsx`?**
   _High betweenness centrality (0.038) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**

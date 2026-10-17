@@ -93,6 +93,7 @@
   "91": "CLAUDE.md",
   "92": "base.js",
   "93": "dependencies",
-  "94": "zip.test.ts",
-  "95": "scripts"
+  "94": "pdf.ts",
+  "95": "scripts",
+  "96": "003-reading-checkpoint.sql"
 }
