@@ -35,8 +35,10 @@ export default function TitlePage() {
     const title = ok(await supabase.from("titles").select("*, title_genres(genres(name)), profiles!owner_id(username,display_name)").eq("slug", slug).maybeSingle()) as Full | null;
     if (!title) return null;
     // chapter_reads is embedded (RLS limits it to my rows) so a long series never builds a huge .in() URL.
-    const rows = ok(await supabase.from("chapters").select("*, chapter_reads(chapter_id)").eq("title_id", title.id).order("number", { ascending: false })) as (Chapter & { chapter_reads: { chapter_id: string }[] })[];
+    const rows = ok(await supabase.from("chapters").select("*, chapter_reads(chapter_id,page,read_at)").eq("title_id", title.id).order("number", { ascending: false })) as (Chapter & { chapter_reads: { chapter_id: string; page: number | null; read_at: string }[] })[];
     const chapters: Chapter[] = rows;
+    // The chapter left half-read most recently: "Continuar" goes there and the reader jumps to the page.
+    const resume = rows.flatMap((c) => c.chapter_reads.filter((r) => r.page)).sort((a, b) => b.read_at.localeCompare(a.read_at))[0];
     let status = "", read = new Set<string>(), myLists: { id: string; name: string }[] = [], inLists = new Set<string>();
     if (user) {
       status = (await supabase.from("library_entries").select("status").eq("user_id", user.id).eq("title_id", title.id).maybeSingle()).data?.status ?? "";
@@ -44,13 +46,13 @@ export default function TitlePage() {
       myLists = ok(await supabase.from("lists").select("id,name").eq("owner_id", user.id).order("name")) as { id: string; name: string }[];
       if (myLists.length) inLists = new Set(ok(await supabase.from("list_items").select("list_id").eq("title_id", title.id).in("list_id", myLists.map((l) => l.id))).map((r: { list_id: string }) => r.list_id));
     }
-    return { title, chapters, status, read, myLists, inLists };
+    return { title, chapters, status, read, myLists, inLists, resume };
   }, [slug, user?.id]);
 
   if (d.loading && d.data === undefined) return <div className="space-y-4"><Skeleton className="h-64" /><Skeleton className="h-40" /></div>;
   if (d.error) return <ErrorBox message={d.error} />;
   if (!d.data) return <Empty>No encontramos esa obra. <Link href="/biblioteca" className="text-accent">Volver a la biblioteca</Link></Empty>;
-  const { title, chapters, status, read, myLists, inLists } = d.data;
+  const { title, chapters, status, read, myLists, inLists, resume } = d.data;
   const cover = mediaUrl(title.cover_path);
 
   const setStatus = async (value: string) => {
@@ -87,7 +89,7 @@ export default function TitlePage() {
     setDl((s) => { const n = new Set(s); n.delete(cid); return n; });
   };
 
-  const first = [...chapters].reverse().find((c) => !read.has(c.id)) ?? chapters[0];
+  const first = (resume && chapters.find((c) => c.id === resume.chapter_id)) || ([...chapters].reverse().find((c) => !read.has(c.id)) ?? chapters[0]);
 
   return (
     <div className="anim-page space-y-8">
@@ -119,7 +121,7 @@ export default function TitlePage() {
           <p className={open ? "whitespace-pre-line" : "line-clamp-4 whitespace-pre-line"}>{title.synopsis || "Sin sinopsis."}</p>
           {title.synopsis.length > 200 && <button className="text-sm text-accent" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "Ver menos" : "Ver más"}</button>}
           <div className="flex items-center gap-3">
-            {first && <Link href={`/read/${first.id}`} className="inline-flex min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-accent px-4 text-sm font-semibold text-on-accent shadow-card transition hover:brightness-110 active:scale-[.97]">{read.size ? "Continuar" : "Empezar a leer"}</Link>}
+            {first && <Link href={`/read/${first.id}`} className="inline-flex min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-accent px-4 text-sm font-semibold text-on-accent shadow-card transition hover:brightness-110 active:scale-[.97]">{resume ? `Continuar · pág. ${resume.page}` : read.size ? "Continuar" : "Empezar a leer"}</Link>}
             {user
               ? <label className="flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap text-sm">Estado
                   <Select disabled={busy} value={status} onChange={(e) => setStatus(e.target.value)} className="w-full min-w-0 flex-1">

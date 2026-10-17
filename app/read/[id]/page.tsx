@@ -6,6 +6,7 @@ import { useFetch, useMe, ok } from "@/lib/hooks";
 import { supabase, mediaUrl, type Chapter } from "@/lib/supabase";
 import { getSaved, savedIds, type SavedChapter } from "@/lib/offline";
 import { Button, Callout, Empty, ErrorBox, Skeleton } from "@/components/ui";
+import { toast } from "@/lib/feedback";
 
 type Page = { key: string; position: number; src: string; width: number | null; height: number | null };
 type Data = {
@@ -42,6 +43,9 @@ export default function Reader() {
   const [showBar, setShowBar] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pinned = useRef(false); // pointer or focus is on the toolbar: don't hide it
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const asked = useRef<string | null>(null); // chapter whose checkpoint we already looked up
+  const checked = useRef<string | null>(null); // ...and got an answer for: only then may we overwrite it
 
   const d = useFetch<Data | null>(async () => {
     try {
@@ -86,6 +90,40 @@ export default function Reader() {
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const total = d.data?.pages.length ?? 0;
+
+  // Page under the middle of the screen in strip mode (0-based).
+  const stripAt = () => {
+    const mid = (root.current?.scrollTop ?? 0) + innerHeight / 2;
+    let n = 0;
+    root.current?.querySelectorAll<HTMLElement>("[data-page]").forEach((el, k) => { if (el.offsetTop <= mid) n = k; });
+    return n;
+  };
+
+  // Checkpoint: a second after the reader stops, save the page they are on; null once they reach the last one.
+  const checkpoint = (n?: number) => {
+    if (!user || !d.data || d.data.fromCopy || checked.current !== id) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const page = (n ?? stripAt()) + 1;
+      supabase.from("chapter_reads").upsert({ user_id: user.id, chapter_id: id, page: page >= total ? null : page, read_at: new Date().toISOString() }).then(() => {});
+    }, 1000);
+  };
+
+  // Coming back: jump to the saved page, once per chapter.
+  useEffect(() => {
+    if (!user || !d.data || d.data.fromCopy || asked.current === id) return;
+    asked.current = id;
+    supabase.from("chapter_reads").select("page").eq("user_id", user.id).eq("chapter_id", id).maybeSingle().then(({ data }) => {
+      checked.current = id;
+      const n = data?.page;
+      if (!n || n < 2 || n > total) return;
+      setI(n - 1);
+      root.current?.querySelectorAll("[data-page]")[n - 1]?.scrollIntoView();
+      toast(`Sigues en la página ${n}`, "info");
+    });
+  }, [user, d.data, id, total]);
+
+  useEffect(() => { if (paged) checkpoint(i); }, [i, paged]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!paged) return;
     const key = (e: KeyboardEvent) => {
@@ -115,7 +153,7 @@ export default function Reader() {
   const step = "flex size-11 shrink-0 items-center justify-center rounded-xl border border-line text-2xl leading-none transition active:scale-95";
 
   return (
-    <div ref={root} data-scroller onScroll={reveal} onClick={() => { if (!paged) reveal(); }}
+    <div ref={root} data-scroller onScroll={() => { reveal(); if (!paged) checkpoint(); }} onClick={() => { if (!paged) reveal(); }}
       className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-bg">
       {d.data.fromCopy && <div className="mx-auto max-w-[800px] p-3"><Callout tone="info" title="Leyendo la copia descargada">Esta versión está guardada en tu dispositivo. Si el autor la actualizó, vuelve a descargarla con conexión.</Callout></div>}
       {pages.length === 0 && <div className="p-6"><Empty>Este capítulo todavía no tiene páginas.</Empty></div>}
@@ -142,7 +180,7 @@ export default function Reader() {
               <svg aria-hidden viewBox="0 0 24 24" className="size-5 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.75]"><path d="M4 11.5 12 5l8 6.5M6 10v9h4v-5h4v5h4v-9" /></svg>
             </Link>
             <Link href={back} className="min-w-0 flex-1 truncate text-sm font-semibold">{title.name}</Link>
-                        <button type="button" onClick={() => setPaged(!paged)} className="shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-muted transition hover:bg-surface">{paged ? "Modo tira" : "Modo páginas"}</button>
+                        <button type="button" onClick={() => { if (!paged) setI(stripAt()); setPaged(!paged); }} className="shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-muted transition hover:bg-surface">{paged ? "Modo tira" : "Modo páginas"}</button>
           </div>
           <div className="flex items-center gap-2">
             {prev ? <Link href={`/read/${prev.id}${q}`} aria-label="Capítulo anterior" className={`${step} hover:bg-surface`}>‹</Link> : <span aria-hidden className={`${step} opacity-30`}>‹</span>}
@@ -165,7 +203,7 @@ function Img({ p }: { p: Page }) {
   const [n, setN] = useState(0);
   if (failed) return <div className="p-6 text-center"><p className="text-danger">No se pudo cargar la página {p.position}.</p><Button variant="secondary" onClick={() => { setFailed(false); setN(n + 1); }}>Reintentar</Button></div>;
   return (
-    <div className={loaded ? "" : "skeleton"} style={p.width && p.height ? { aspectRatio: `${p.width} / ${p.height}` } : { minHeight: "60vh" }}>
+    <div data-page className={loaded ? "" : "skeleton"} style={p.width && p.height ? { aspectRatio: `${p.width} / ${p.height}` } : { minHeight: "60vh" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img key={n} src={p.src} alt={`Página ${p.position}`} width={p.width ?? undefined} height={p.height ?? undefined}
         loading="lazy" onLoad={() => setLoaded(true)} onError={() => setFailed(true)}
