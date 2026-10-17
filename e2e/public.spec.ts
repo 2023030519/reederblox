@@ -101,14 +101,13 @@ test("reader zoom: buttons and a two-finger pinch widen the pages", async ({ pag
   await expect(strip).toBeVisible();
   const w0 = (await strip.boundingBox())!.width;
 
-  await page.locator("[data-scroller]").click(); // shows the toolbar
   await page.getByRole("button", { name: "Acercar" }).click();
-  await expect(page.getByRole("button", { name: "Restablecer zoom" })).toHaveText("125%");
+  await expect(page.getByRole("button", { name: /restablecer zoom/ })).toHaveText("125%");
   expect((await strip.boundingBox())!.width).toBeCloseTo(w0 * 1.25, 0);
 
   // Pinch out with two fingers (the browser's own pinch is off in real fullscreen).
   const cdp = await page.context().newCDPSession(page);
-  const touch = (type: string, d: number) => cdp.send("Input.dispatchTouchEvent", {
+  const touch = (type: "touchStart" | "touchMove" | "touchEnd", d: number) => cdp.send("Input.dispatchTouchEvent", {
     type, touchPoints: type === "touchEnd" ? [] : [{ x: 195 - d, y: 400, id: 1 }, { x: 195 + d, y: 400, id: 2 }],
   });
   await touch("touchStart", 50);
@@ -116,6 +115,21 @@ test("reader zoom: buttons and a two-finger pinch widen the pages", async ({ pag
   await touch("touchEnd", 0);
   expect((await strip.boundingBox())!.width).toBeGreaterThan(w0 * 2);
 
-  await page.getByRole("button", { name: "Restablecer zoom" }).click();
+  await page.getByRole("button", { name: /restablecer zoom/ }).click();
   expect((await strip.boundingBox())!.width).toBeCloseTo(w0, 0);
+});
+
+test("reader toolbar: starts visible, a tap hides it and another shows it; no automatic fullscreen", async ({ page }) => {
+  const c = await firstPublishedChapter();
+  test.skip(!c, "no published chapter with pages in the database");
+  await page.goto(`/read/${c!.id}`);
+  const bar = page.getByRole("toolbar", { name: "Herramientas del lector" });
+  await expect(bar).toBeInViewport();
+  await page.locator("[data-page]").first().click();
+  await expect(bar.locator("..")).toHaveClass(/pointer-events-none/);
+  await page.locator("[data-page]").first().click();
+  await expect(bar.locator("..")).not.toHaveClass(/pointer-events-none/);
+  expect(await page.evaluate(() => !!document.fullscreenElement)).toBe(false);
+  await bar.getByRole("button", { name: "Guardar página" }).click();
+  await expect(page.getByText("Entra con tu cuenta para guardar tu página")).toBeVisible();
 });

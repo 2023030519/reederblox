@@ -29,7 +29,6 @@ async function fromCopy(s: SavedChapter): Promise<Data> {
   };
 }
 
-const BAR_MS = 3000; // toolbar stays this long after the last scroll
 const MAX_ZOOM = 4;
 const dist = (t: React.TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
 
@@ -42,9 +41,8 @@ export default function Reader() {
   const [paged, setPaged] = useState(false);
   const [i, setI] = useState(0);
   const root = useRef<HTMLDivElement>(null);
-  const [showBar, setShowBar] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const pinned = useRef(false); // pointer or focus is on the toolbar: don't hide it
+  const [showBar, setShowBar] = useState(true); // a tap on the page shows or hides it
+  const [full, setFull] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const asked = useRef<string | null>(null); // chapter whose checkpoint we already looked up
   const checked = useRef<string | null>(null); // ...and got an answer for: only then may we overwrite it
@@ -84,16 +82,16 @@ export default function Reader() {
     root.current?.scrollTo(0, 0);
   }, [id]);
 
-  // Reading is fullscreen by default: the page covers the app, and we also ask the browser for real fullscreen
-  // (it may refuse without a recent tap; the cover still works). Leaving the reader leaves fullscreen.
-  const ready = !!d.data;
+  // Real fullscreen only from the toolbar button; leaving the reader leaves it.
   useEffect(() => {
-    if (!ready) return;
-    root.current?.requestFullscreen?.().catch(() => {});
-    return () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); };
-  }, [ready]);
-
-  useEffect(() => () => clearTimeout(timer.current), []);
+    const on = () => setFull(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", on);
+    return () => {
+      document.removeEventListener("fullscreenchange", on);
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    };
+  }, []);
+  const toggleFull = () => (document.fullscreenElement ? document.exitFullscreen() : root.current?.requestFullscreen())?.catch(() => toast("Tu navegador no permitió la pantalla completa", "info"));
 
   const total = d.data?.pages.length ?? 0;
 
@@ -131,6 +129,15 @@ export default function Reader() {
     }, 1000);
   };
 
+  // The "Guardar página" button: save the page right now and say so.
+  const markPage = async () => {
+    if (!user) return toast("Entra con tu cuenta para guardar tu página", "info");
+    clearTimeout(saveTimer.current);
+    const page = (paged ? i : stripAt()) + 1;
+    const { error } = await supabase.from("chapter_reads").upsert({ user_id: user.id, chapter_id: id, page, read_at: new Date().toISOString() });
+    toast(error ? "No se pudo guardar la página" : `Página ${page} guardada`, error ? "danger" : "success");
+  };
+
   // Coming back: jump to the saved page, once per chapter.
   useEffect(() => {
     if (!user || !d.data || d.data.fromCopy || asked.current === id) return;
@@ -164,19 +171,19 @@ export default function Reader() {
   const prev = siblings[at - 1], next = siblings[at + 1];
   const back = fromStudio ? `/studio/${chapter.title_id}` : `/title/${title.slug}`;
 
-  // Show the toolbar, then hide it BAR_MS after the last scroll.
-  const reveal = () => {
-    setShowBar(true);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => { if (!pinned.current) setShowBar(false); }, BAR_MS);
-  };
-  const pin = (on: boolean) => { pinned.current = on; if (on) { clearTimeout(timer.current); setShowBar(true); } else reveal(); };
-
   const zoomed = zoom > 1 ? { width: Math.min(800, innerWidth) * zoom, maxWidth: "none" } : undefined;
   const step = "flex size-11 shrink-0 items-center justify-center rounded-xl border border-line text-2xl leading-none transition active:scale-95";
 
   return (
-    <div ref={root} data-scroller onScroll={() => { reveal(); if (!paged) checkpoint(); }} onClick={() => { if (!paged) reveal(); }}
+    <div ref={root} data-scroller onScroll={() => { if (!paged) checkpoint(); }}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('[role="toolbar"]')) return;
+        // Pages mode: the left third of the screen goes back, the right third goes on. Any other tap shows or hides the toolbar.
+        const x = e.clientX / innerWidth;
+        if (paged && total && x < 1 / 3) return setI((n) => Math.max(0, n - 1));
+        if (paged && total && x > 2 / 3) return setI((n) => Math.min(total - 1, n + 1));
+        setShowBar((s) => !s);
+      }}
       onTouchStart={(e) => { if (e.touches.length === 2) pinch.current = { d: dist(e.touches), z: zoom }; }}
       onTouchMove={(e) => {
         if (!pinch.current || e.touches.length !== 2) return;
@@ -189,12 +196,7 @@ export default function Reader() {
       {pages.length === 0 && <div className="p-6"><Empty>Este capítulo todavía no tiene páginas.</Empty></div>}
       {paged && pages.length > 0 ? (
         <div className="mx-auto w-full max-w-[800px]" style={zoomed}>
-          {/* Tap the left third to go back, the rest to go on. */}
-          <div onClick={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            setI((n) => (e.clientX - r.left < r.width / 3 ? Math.max(0, n - 1) : Math.min(total - 1, n + 1)));
-            reveal();
-          }}><Img p={pages[i]} /></div>
+          <Img p={pages[i]} />
           <p className="py-3 text-center text-sm text-muted" aria-live="polite">{i + 1} / {total}</p>
           {pages[i + 1] && <link rel="preload" as="image" href={pages[i + 1].src} />}
         </div>
@@ -203,7 +205,7 @@ export default function Reader() {
       )}
 
       <div className={`fixed inset-x-0 bottom-0 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition duration-300 ${showBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"}`}>
-        <div role="toolbar" aria-label="Herramientas del lector" onPointerEnter={() => pin(true)} onPointerLeave={() => pin(false)} onFocus={() => pin(true)} onBlur={() => pin(false)}
+        <div role="toolbar" aria-label="Herramientas del lector" onFocus={() => setShowBar(true)}
           className="w-full max-w-md space-y-2 rounded-3xl border border-line bg-bg/90 p-2.5 shadow-pop backdrop-blur">
           <div className="flex items-center gap-2">
             <Link href={back} aria-label={fromStudio ? "Volver al Estudio" : "Volver a la obra"} className="flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-surface active:scale-95">
@@ -214,8 +216,17 @@ export default function Reader() {
           </div>
           <div className="flex items-center justify-center gap-1 text-sm font-semibold">
             <button type="button" aria-label="Alejar" disabled={zoom <= 1} onClick={() => zoomTo(zoom / 1.25)} className="flex size-9 items-center justify-center rounded-full text-lg transition hover:bg-surface active:scale-95 disabled:opacity-30">−</button>
-            <button type="button" aria-label="Restablecer zoom" onClick={() => zoomTo(1)} className="min-w-14 rounded-full px-2 py-1 tabular-nums transition hover:bg-surface">{Math.round(zoom * 100)}%</button>
+            <button type="button" aria-label={`${Math.round(zoom * 100)}%, restablecer zoom`} onClick={() => zoomTo(1)} className="min-w-14 rounded-full px-2 py-1 tabular-nums transition hover:bg-surface">{Math.round(zoom * 100)}%</button>
             <button type="button" aria-label="Acercar" disabled={zoom >= MAX_ZOOM} onClick={() => zoomTo(zoom * 1.25)} className="flex size-9 items-center justify-center rounded-full text-lg transition hover:bg-surface active:scale-95 disabled:opacity-30">+</button>
+            <span aria-hidden className="mx-1 h-5 w-px bg-line" />
+            <button type="button" onClick={markPage} className="flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition hover:bg-surface active:scale-95">
+              <svg aria-hidden viewBox="0 0 24 24" className="size-4 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2]"><path d="M6 4h12v17l-6-4-6 4z" /></svg>Guardar página
+            </button>
+            <button type="button" aria-label={full ? "Salir de pantalla completa" : "Pantalla completa"} aria-pressed={full} onClick={toggleFull} className="flex size-9 items-center justify-center rounded-full transition hover:bg-surface active:scale-95">
+              <svg aria-hidden viewBox="0 0 24 24" className="size-5 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.75]">
+                <path d={full ? "M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" : "M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"} />
+              </svg>
+            </button>
           </div>
           <div className="flex items-center gap-2">
             {prev ? <Link href={`/read/${prev.id}${q}`} aria-label="Capítulo anterior" className={`${step} hover:bg-surface`}>‹</Link> : <span aria-hidden className={`${step} opacity-30`}>‹</span>}
