@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { hardRefresh } from "@/lib/refresh";
 
 const TRIGGER = 70; // px of pull (after resistance) that counts as a refresh
 const MAX = 100;
 
-// Pull down from the top of any screen to reload it. Scrollable layers (the reader) opt in with data-scroller.
+// Pull down from the top of any screen to hard-refresh it (see lib/refresh). Scrollable layers (the reader) opt in with data-scroller.
 export function PullToRefresh() {
   const [pull, setPull] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -32,7 +33,7 @@ export function PullToRefresh() {
     const onEnd = () => {
       if (start.current === null) return;
       start.current = null;
-      if (last.current >= TRIGGER) { setBusy(true); location.reload(); return; }
+      if (last.current >= TRIGGER) { setBusy(true); hardRefresh(); return; }
       setPull(0);
     };
 

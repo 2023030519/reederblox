@@ -6,7 +6,8 @@ import { useFetch, useMe, ok } from "@/lib/hooks";
 import { supabase, mediaUrl } from "@/lib/supabase";
 import { toWebp } from "@/lib/image";
 import { toast } from "@/lib/feedback";
-import { Empty, ErrorBox, Skeleton, TitleCard } from "@/components/ui";
+import { Button, Callout, Empty, ErrorBox, Skeleton, TitleCard } from "@/components/ui";
+import { hardRefresh, hasUpdate } from "@/lib/refresh";
 import { EditProfileScreen } from "@/components/edit-profile";
 
 type Card = Parameters<typeof TitleCard>[0]["t"];
@@ -22,6 +23,9 @@ export default function Creator() {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState<Kind | null>(null);
   const [view, setView] = useState<string | null>(null); // photo shown full size
+  const [update, setUpdate] = useState(false); // a newer build is deployed than the one this page runs
+
+  useEffect(() => { hasUpdate().then(setUpdate); }, []);
 
   useEffect(() => {
     if (!view) return;
@@ -87,6 +91,12 @@ export default function Creator() {
   const avatar = mediaUrl(profile.avatar_url), banner = mediaUrl(profile.banner_url);
   return (
     <div className="space-y-8">
+      {mine && update && (
+        <Callout tone="info" role="status" title="readerblox se actualizó">
+          <p>Haz un hard refresh para ver la versión nueva: desliza hacia abajo desde arriba de la pantalla, o en la computadora presiona Ctrl+Shift+R. Tus descargas no se borran.</p>
+          <Button type="button" className="mt-2" onClick={hardRefresh}>Actualizar ahora</Button>
+        </Callout>
+      )}
       <div>
         <button type="button" disabled={!banner} onClick={() => banner && setView(banner)} aria-label="Ver foto de portada"
           className="-mx-4 -mt-6 block h-32 w-[calc(100%+2rem)] overflow-hidden bg-surface enabled:cursor-zoom-in sm:mx-0 sm:mt-0 sm:h-44 sm:w-full sm:rounded-3xl">
