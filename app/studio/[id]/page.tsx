@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useFetch, useMe, ok } from "@/lib/hooks";
 import { supabase, mediaUrl, DEMOGRAPHIES, STATUSES, TYPES, type Chapter, type Title } from "@/lib/supabase";
 import { byName, toWebp } from "@/lib/image";
-import { expandFiles, isZip } from "@/lib/zip";
+import { expandFiles, isPdf, isZip } from "@/lib/zip";
 import { Badge, Button, Callout, Empty, ErrorBox, Field, Input, ProgressBar, Select, Skeleton } from "@/components/ui";
 import { confirmAsync, toast } from "@/lib/feedback";
 import { SortableGrid } from "@/components/sortable-grid";
@@ -242,18 +242,18 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [files]);
 
-  // Accepts images and/or a ZIP; zips are unpacked in the browser.
+  // Accepts images, a ZIP and/or a PDF; zips are unpacked and PDF pages rendered in the browser.
   const pick = async (picked: File[]) => {
     if (!picked.length) return;
     setError("");
     setReading(true);
     try {
       const images = (await expandFiles(picked)).sort(byName);
-      if (!images.length) throw new Error("No encontré imágenes JPG, PNG o WebP en lo que elegiste.");
+      if (!images.length) throw new Error("No encontré imágenes JPG, PNG o WebP ni páginas de PDF en lo que elegiste.");
       setFiles(images);
-      const zip = picked.find(isZip);
-      if (!number && zip) {
-        const n = zip.name.replace(/\.zip$/i, "").match(/(\d+(?:\.\d+)?)(?!.*\d)/); // last number in the file name
+      const pack = picked.find((f) => isZip(f) || isPdf(f));
+      if (!number && pack) {
+        const n = pack.name.replace(/\.(zip|pdf)$/i, "").match(/(\d+(?:\.\d+)?)(?!.*\d)/); // last number in the file name
         if (n) setNumber(n[1]);
       }
     } catch (err) {
@@ -264,7 +264,7 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!files.length) return setError("Elige imágenes o un ZIP.");
+    if (!files.length) return setError("Elige imágenes, un ZIP o un PDF.");
     setBusy(true);
     setError("");
     let chapterId: string | undefined;
@@ -314,10 +314,10 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
         onDrop={(e) => { e.preventDefault(); setDrag(false); pick([...e.dataTransfer.files]); }}
         className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed p-6 text-center transition-colors focus-within:border-accent ${drag ? "border-accent bg-bg" : "border-field"}`}
       >
-        <span className="font-semibold">{reading ? "Leyendo archivos…" : "Arrastra aquí las páginas o un ZIP"}</span>
-        <span className="text-sm text-muted">o haz clic para elegir · JPG, PNG, WebP o un .zip con las imágenes</span>
-        <input key={inputKey} type="file" multiple accept="image/jpeg,image/png,image/webp,.zip,application/zip" className="sr-only"
-          aria-label="Páginas del capítulo: imágenes o un ZIP"
+        <span className="font-semibold">{reading ? "Leyendo archivos…" : "Arrastra aquí las páginas, un ZIP o un PDF"}</span>
+        <span className="text-sm text-muted">o haz clic para elegir · JPG, PNG, WebP, un .zip con las imágenes o un .pdf</span>
+        <input key={inputKey} type="file" multiple accept="image/jpeg,image/png,image/webp,.zip,application/zip,.pdf,application/pdf" className="sr-only"
+          aria-label="Páginas del capítulo: imágenes, un ZIP o un PDF"
           onChange={(e) => pick([...(e.target.files ?? [])])} />
       </label>
 

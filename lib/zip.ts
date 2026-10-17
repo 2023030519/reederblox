@@ -6,13 +6,15 @@ const MAX_BYTES = 300e6; // uncompressed, guards against zip bombs
 
 const ext = (name: string) => name.split(".").pop()?.toLowerCase() ?? "";
 export const isZip = (f: File) => ext(f.name) === "zip" || f.type === "application/zip" || f.type === "application/x-zip-compressed";
+export const isPdf = (f: File) => ext(f.name) === "pdf" || f.type === "application/pdf";
 
-// Turns a mixed selection (images and/or zips) into a flat list of image files.
+// Turns a mixed selection (images, zips and/or PDFs) into a flat list of image files.
 // Skips folders, macOS junk (__MACOSX, ._x), hidden files and anything that is not jpg/png/webp.
 // shortcut: one chapter per zip; images in different folders are merged and sorted by file name.
 export async function expandFiles(files: File[]): Promise<File[]> {
   const out: File[] = [];
   for (const f of files) {
+    if (isPdf(f)) { out.push(...await (await import("./pdf")).pdfToImages(f)); continue; }
     if (!isZip(f)) { out.push(f); continue; }
     const data = new Uint8Array(await f.arrayBuffer());
     let total = 0, count = 0;

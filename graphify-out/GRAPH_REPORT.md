@@ -1,17 +1,17 @@
 # Graph Report - readerblox  (2026-10-16)
 
 ## Corpus Check
-- 109 files · ~338,386 words
+- 110 files · ~338,612 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 7 file(s) not represented in the graph (top: .css 3, (none) 2, .csv 2)
 
 ## Summary
-- 1237 nodes · 2023 edges · 91 communities (78 shown, 13 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.86)
+- 1242 nodes · 2034 edges · 96 communities (82 shown, 14 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1ad2cc73`
+- Built from commit: `1730567a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -89,6 +89,7 @@
 - 5. CONTEXT-AWARE PROACTIVITY
 - 8. DARK MODE PROTOCOL
 - 21. MOBILE ANTI-AI-TELLS RULE
+- devDependencies
 - 7. DIAL DEFINITIONS (Technical Reference)
 - 33. DEFAULT SECTION PACKS
 - 14. HERO MINIMALISM RULES
@@ -97,8 +98,12 @@
 - 37. EXAMPLE INTERPRETATIONS
 - 15. DEFAULT SITE PACKS
 - 20. EXAMPLE INTERPRETATIONS
+- zip.ts
 - imagegen-frontend-web/SKILL.md
 - CLAUDE.md
+- dependencies
+- zip.test.ts
+- scripts
 
 ## God Nodes (most connected - your core abstractions)
 1. `CORE DIRECTIVE: IMAGE-FIRST WEBSITE DESIGN TO CODE` - 39 edges
@@ -115,31 +120,31 @@
 ## Surprising Connections (you probably didn't know these)
 - `To check (not reproduced)` --references--> `useMe()`  [INFERRED]
   replica/bugs.md → lib/hooks.ts
-- `NewChapter()` --indirect_call--> `isZip()`  [INFERRED]
-  app/studio/[id]/page.tsx → lib/zip.ts
 - `NewChapter()` --indirect_call--> `byName()`  [INFERRED]
   app/studio/[id]/page.tsx → lib/image.ts
 - `NewChapter()` --calls--> `expandFiles()`  [EXTRACTED]
   app/studio/[id]/page.tsx → lib/zip.ts
-- `TitlePage()` --calls--> `Spinner()`  [EXTRACTED]
-  app/title/[slug]/page.tsx → components/ui.tsx
+- `NewChapter()` --calls--> `isPdf()`  [EXTRACTED]
+  app/studio/[id]/page.tsx → lib/zip.ts
+- `NewChapter()` --calls--> `isZip()`  [EXTRACTED]
+  app/studio/[id]/page.tsx → lib/zip.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (91 total, 13 thin omitted)
+## Communities (96 total, 14 thin omitted)
 
 ### Community 0 - "ui.tsx"
 Cohesion: 0.07
 Nodes (107): Library(), SORTS, History(), Row, Card, Full, ListPage(), ListRow (+99 more)
 
 ### Community 1 - "package.json"
-Cohesion: 0.05
-Nodes (41): eslintConfig, expandFiles(), ext(), isZip(), MIME, png, dependencies, fflate (+33 more)
+Cohesion: 0.13
+Nodes (14): eslintConfig, name, private, version, @axe-core/playwright, eslint, eslint-config-next, react-dom (+6 more)
 
 ### Community 2 - "layout.tsx"
 Cohesion: 0.08
-Nodes (30): geist, metadata, RootLayout(), viewport, Ask, Feedback(), ToastItem, toneOf (+22 more)
+Nodes (31): geist, metadata, RootLayout(), viewport, Ask, Feedback(), ToastItem, toneOf (+23 more)
 
 ### Community 3 - "assets.mjs"
 Cohesion: 0.07
@@ -154,8 +159,8 @@ Cohesion: 0.24
 Nodes (15): chapter_reads, chapters, comments, genres, handle_new_user(), library_entries, list_items, lists (+7 more)
 
 ### Community 6 - "data.ts"
-Cohesion: 0.23
-Nodes (8): env, firstPublishedChapter(), firstPublishedTitle(), get(), SUPABASE_KEY, SUPABASE_URL, @axe-core/playwright, @playwright/test
+Cohesion: 0.26
+Nodes (7): env, firstPublishedChapter(), firstPublishedTitle(), get(), SUPABASE_KEY, SUPABASE_URL, @playwright/test
 
 ### Community 7 - "run.mjs"
 Cohesion: 0.10
@@ -295,7 +300,7 @@ Nodes (10): 1. What the study measured, 2. The scale: few sizes, far apart, 3. S
 
 ### Community 47 - "edit-profile.tsx"
 Cohesion: 0.24
-Nodes (14): AtIcon(), AvatarHeader(), BackIcon(), CameraIcon(), EditProfileScreen(), FieldProps, initials(), Kind (+6 more)
+Nodes (13): AtIcon(), AvatarHeader(), BackIcon(), CameraIcon(), EditProfileScreen(), FieldProps, initials(), Kind (+5 more)
 
 ### Community 48 - "convert"
 Cohesion: 0.47
@@ -409,6 +414,10 @@ Nodes (5): 8.A Token Strategy (pick one, stick to it), 8.B Do Not Prescribe Spec
 Cohesion: 0.40
 Nodes (5): 21. MOBILE ANTI-AI-TELLS RULE, Copy AI tells, Layout AI tells, UI clutter tells, Visual AI tells
 
+### Community 79 - "devDependencies"
+Cohesion: 0.18
+Nodes (11): devDependencies, @axe-core/playwright, eslint, eslint-config-next, @playwright/test, tailwindcss, @tailwindcss/turbopack, @types/node (+3 more)
+
 ### Community 80 - "7. DIAL DEFINITIONS (Technical Reference)"
 Cohesion: 0.50
 Nodes (4): 7. DIAL DEFINITIONS (Technical Reference), DESIGN_VARIANCE (Level 1-10), MOTION_INTENSITY (Level 1-10), VISUAL_DENSITY (Level 1-10)
@@ -441,25 +450,37 @@ Nodes (4): 12-section pack, 15. DEFAULT SITE PACKS, 4-section pack, 8-section pa
 Cohesion: 0.50
 Nodes (4): 20. EXAMPLE INTERPRETATIONS, Example 1, Example 2, Example 3
 
+### Community 89 - "zip.ts"
+Cohesion: 0.39
+Nodes (6): expandFiles(), ext(), isPdf(), isZip(), MIME, pdfjs-dist
+
+### Community 93 - "dependencies"
+Cohesion: 0.29
+Nodes (7): dependencies, fflate, next, pdfjs-dist, react, react-dom, @supabase/supabase-js
+
+### Community 95 - "scripts"
+Cohesion: 0.40
+Nodes (5): scripts, build, dev, lint, start
+
 ## Knowledge Gaps
 - **7 isolated node(s):** `react-dom`, `@tailwindcss/turbopack`, `@types/node`, `@types/react`, `@types/react-dom` (+2 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 818 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 820 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `@playwright/test` connect `data.ts` to `package.json`, `ref_node_fs`, `run.mjs`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
 - **What connects `react-dom`, `@tailwindcss/turbopack`, `@types/node` to the rest of the system?**
   _7 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ui.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06811805633486702 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06867916058803726 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `ui.tsx` to `package.json`, `layout.tsx`, `edit-profile.tsx`?**
   _High betweenness centrality (0.038) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.04698581560283688 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.13333333333333333 - nodes in this community are weakly interconnected._
 - **Why does `next` connect `ui.tsx` to `package.json`, `layout.tsx`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Should `layout.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.08232118758434548 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07948717948717948 - nodes in this community are weakly interconnected._

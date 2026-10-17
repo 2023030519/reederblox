@@ -78,6 +78,7 @@
   "76": "5. CONTEXT-AWARE PROACTIVITY",
   "77": "8. DARK MODE PROTOCOL",
   "78": "21. MOBILE ANTI-AI-TELLS RULE",
+  "79": "devDependencies",
   "80": "7. DIAL DEFINITIONS (Technical Reference)",
   "81": "33. DEFAULT SECTION PACKS",
   "82": "14. HERO MINIMALISM RULES",
@@ -87,7 +88,11 @@
   "86": "15. DEFAULT SITE PACKS",
   "87": "20. EXAMPLE INTERPRETATIONS",
   "88": "002-creator-genres.sql",
+  "89": "zip.ts",
   "90": "imagegen-frontend-web/SKILL.md",
   "91": "CLAUDE.md",
-  "92": "base.js"
+  "92": "base.js",
+  "93": "dependencies",
+  "94": "zip.test.ts",
+  "95": "scripts"
 }
