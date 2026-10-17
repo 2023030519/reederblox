@@ -1,17 +1,17 @@
 # Graph Report - readerblox  (2026-10-17)
 
 ## Corpus Check
-- 114 files · ~341,873 words
+- 114 files · ~341,903 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 7 file(s) not represented in the graph (top: .css 3, (none) 2, .csv 2)
 
 ## Summary
-- 1273 nodes · 2080 edges · 99 communities (83 shown, 16 thin omitted)
+- 1273 nodes · 2082 edges · 99 communities (83 shown, 16 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7aae78c3`
+- Built from commit: `8223fe62`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -470,7 +470,7 @@ Nodes (16): args, DRY, env, existing, file, isId, log(), must() (+8 more)
 
 ## Knowledge Gaps
 - **7 isolated node(s):** `react-dom`, `@tailwindcss/turbopack`, `@types/node`, `@types/react`, `@types/react-dom` (+2 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 841 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 840 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -489,4 +489,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `react` connect `ui.tsx` to `package.json`, `layout.tsx`, `edit-profile.tsx`?**
   _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **Should `layout.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.07665505226480836 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07897793263646923 - nodes in this community are weakly interconnected._

@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "components/header.tsx": {
-    "mtime": 1792162546.5459433,
-    "seen": 1792162662.371433,
-    "ast_hash": "b0f58217c1f7b14febecc123e20ac5c7",
+    "mtime": 1792219746.2498908,
+    "seen": 1792219781.531297,
+    "ast_hash": "1d65e125c7fc1f3b88c2283aad96c366",
     "semantic_hash": ""
   },
   "components/offline-button.tsx": {

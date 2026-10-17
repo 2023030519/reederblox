@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/hooks";
 import { Logo } from "@/components/logo";
+import { VERSION } from "@/lib/refresh";
 
 // Last known sign-in, kept in localStorage. Server render assumes "signed in", so a returning user never sees "Entrar"
 // flash while the session loads; the real value replaces it on hydration.
@@ -68,6 +69,8 @@ export function Header() {
           <Link href="/" aria-label="readerblox" className={`mr-6 flex items-center text-lg font-semibold tracking-tighter ${scrolled ? "logo-collapsed" : ""}`}>
             <Logo className="h-7 w-auto shrink-0" />
             <span aria-hidden className="logo-name"><span className="pl-2">readerblox</span></span>
+            {/* Outside .logo-name so it stays beside the logo when the name collapses. */}
+            <span className="ml-1.5 self-end pb-0.5 text-[11px] font-normal tracking-normal text-muted tabular-nums">{VERSION.slice(0, 7)}</span>
           </Link>
           <div className="hidden flex-1 items-center justify-evenly gap-1 sm:flex">
             {items.map((i) => <Link key={i.href} href={i.href} className={link(i.href)} aria-current={active(i.href) ? "page" : undefined}>{i.label}</Link>)}
