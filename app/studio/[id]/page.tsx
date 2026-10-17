@@ -142,7 +142,8 @@ export default function StudioTitle() {
         <fieldset className="sm:col-span-2">
           <legend className="text-sm text-muted">Géneros</legend>
           <div className="mt-1 flex flex-wrap gap-2">
-            {[...genres, ...extraGenres].sort((a, b) => a.name.localeCompare(b.name, "es")).map((g) => (
+            {/* after a save, reload() brings the new genres in the fetched list too */}
+            {[...genres, ...extraGenres.filter((x) => !genres.some((g) => g.id === x.id))].sort((a, b) => a.name.localeCompare(b.name, "es")).map((g) => (
               <label key={g.id} className="flex items-center gap-1 rounded-md border border-line px-2 py-1 text-sm">
                 <input type="checkbox" checked={genreIds.includes(g.id)}
                   onChange={(e) => setGenreIds(e.target.checked ? [...genreIds, g.id] : genreIds.filter((x) => x !== g.id))} />
