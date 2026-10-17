@@ -130,6 +130,33 @@ test("reader toolbar: starts visible, a tap hides it and another shows it; no au
   await page.locator("[data-page]").first().click();
   await expect(bar.locator("..")).not.toHaveClass(/pointer-events-none/);
   expect(await page.evaluate(() => !!document.fullscreenElement)).toBe(false);
-  await bar.getByRole("button", { name: "Guardar página" }).click();
-  await expect(page.getByText("Entra con tu cuenta para guardar tu página")).toBeVisible();
+});
+
+test("reader swipe: the strip scrolls by touch, pages mode turns the page with a sideways swipe", async ({ page }) => {
+  const c = await firstPublishedChapter();
+  test.skip(!c, "no published chapter with pages in the database");
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto(`/read/${c!.id}`);
+  await expect(page.locator("[data-page]").first()).toBeVisible();
+  const cdp = await page.context().newCDPSession(page);
+  const scroller = page.locator("[data-scroller]");
+
+  const drag = async (x0: number, y0: number, x1: number, y1: number) => {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: x0, y: y0, id: 1 }] });
+    for (let k = 1; k <= 10; k++) await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x0 + (x1 - x0) * k / 10, y: y0 + (y1 - y0) * k / 10, id: 1 }] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  };
+  await drag(195, 600, 195, 200);
+  await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBeGreaterThan(100);
+
+  await scroller.evaluate((el) => el.scrollTo(0, 0));
+  await page.getByRole("button", { name: "Modo páginas" }).click();
+  const counter = page.getByText(/^\d+ \/ \d+$/);
+  await expect(counter).toHaveText(/^1 \//);
+  const total = Number((await counter.textContent())!.split("/")[1]);
+  test.skip(total < 2, "chapter has a single page");
+  await drag(300, 400, 90, 410);
+  await expect(counter).toHaveText(`2 / ${total}`);
+  await drag(90, 400, 300, 410);
+  await expect(counter).toHaveText(`1 / ${total}`);
 });

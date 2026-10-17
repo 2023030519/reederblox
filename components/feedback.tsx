@@ -35,7 +35,7 @@ export function Feedback() {
 
   return (
     <>
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex flex-col items-center gap-2 px-4 sm:bottom-6">
+      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-[70] flex flex-col items-center gap-2 px-4 sm:bottom-6">
         {toasts.map((t) => (
           <div key={t.id} role="status" className={`anim-toast pointer-events-auto flex max-w-sm items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium shadow-pop ${TONE[toneOf[t.tone]]}`}>
             <span aria-hidden className={`size-2 shrink-0 rounded-full ${DOT[toneOf[t.tone]]}`} />

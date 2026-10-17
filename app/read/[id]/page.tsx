@@ -30,6 +30,8 @@ async function fromCopy(s: SavedChapter): Promise<Data> {
 }
 
 const MAX_ZOOM = 4;
+const SWIPE = 50; // px of horizontal drag that turns the page
+const loadingBar = <div role="progressbar" aria-label="Cargando capítulo" className="bar-busy fixed inset-x-0 top-0 z-[60] h-1 bg-accent" />;
 const dist = (t: React.TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
 
 export default function Reader() {
@@ -49,6 +51,8 @@ export default function Reader() {
   // Our own zoom: the browser's pinch zoom is off in real fullscreen (and disabled here with touch-action so they don't stack).
   const [zoom, setZoom] = useState(1);
   const pinch = useRef<{ d: number; z: number } | null>(null);
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+  const [going, setGoing] = useState(false); // a chapter change was tapped and is on its way
   const focus = useRef<{ x: number; y: number; left: number; top: number; k: number } | null>(null);
 
   const d = useFetch<Data | null>(async () => {
@@ -79,6 +83,7 @@ export default function Reader() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setI(0);
+    setGoing(false);
     root.current?.scrollTo(0, 0);
   }, [id]);
 
@@ -129,15 +134,6 @@ export default function Reader() {
     }, 1000);
   };
 
-  // The "Guardar página" button: save the page right now and say so.
-  const markPage = async () => {
-    if (!user) return toast("Entra con tu cuenta para guardar tu página", "info");
-    clearTimeout(saveTimer.current);
-    const page = (paged ? i : stripAt()) + 1;
-    const { error } = await supabase.from("chapter_reads").upsert({ user_id: user.id, chapter_id: id, page, read_at: new Date().toISOString() });
-    toast(error ? "No se pudo guardar la página" : `Página ${page} guardada`, error ? "danger" : "success");
-  };
-
   // Coming back: jump to the saved page, once per chapter.
   useEffect(() => {
     if (!user || !d.data || d.data.fromCopy || asked.current === id) return;
@@ -163,7 +159,8 @@ export default function Reader() {
     return () => removeEventListener("keydown", key);
   }, [paged, total]);
 
-  if (d.loading && d.data === undefined) return <div className="mx-auto max-w-[800px] space-y-2"><Skeleton className="h-16" /><Skeleton className="h-[75vh]" /></div>;
+  // Loading covers the whole screen like the reader does, so fast taps on the chapter arrows can't land on the app's nav underneath.
+  if (d.loading && d.data === undefined) return <div className="fixed inset-0 z-50 bg-bg">{loadingBar}<Skeleton className="mx-auto h-full max-w-[800px] rounded-none" /></div>;
   if (d.error) return <div className="mx-auto max-w-[800px] space-y-3"><ErrorBox message="No se pudo cargar el capítulo. Si no tienes conexión, solo se pueden leer los capítulos descargados." /><Link href="/offline" className="text-accent">Ver mis descargas</Link></div>;
   if (!d.data) return <Empty>Capítulo no encontrado.</Empty>;
   const { chapter, title, pages, siblings } = d.data;
@@ -184,14 +181,27 @@ export default function Reader() {
         if (paged && total && x > 2 / 3) return setI((n) => Math.min(total - 1, n + 1));
         setShowBar((s) => !s);
       }}
-      onTouchStart={(e) => { if (e.touches.length === 2) pinch.current = { d: dist(e.touches), z: zoom }; }}
+      onTouchStart={(e) => {
+        if (e.touches.length === 2) pinch.current = { d: dist(e.touches), z: zoom };
+        swipe.current = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+      }}
       onTouchMove={(e) => {
         if (!pinch.current || e.touches.length !== 2) return;
         const t = e.touches;
         zoomTo(pinch.current.z * dist(t) / pinch.current.d, (t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2);
       }}
-      onTouchEnd={(e) => { if (e.touches.length < 2) pinch.current = null; }}
+      onTouchEnd={(e) => {
+        if (e.touches.length < 2) pinch.current = null;
+        // Pages mode at 100%: a sideways swipe turns the page (zoomed in, the drag pans instead).
+        const s = swipe.current, t = e.changedTouches[0];
+        swipe.current = null;
+        if (!paged || zoom > 1 || !s || !t) return;
+        const dx = t.clientX - s.x;
+        if (Math.abs(dx) < SWIPE || Math.abs(dx) < Math.abs(t.clientY - s.y)) return;
+        setI((n) => Math.min(total - 1, Math.max(0, n + (dx < 0 ? 1 : -1))));
+      }}
       className="fixed inset-0 z-50 touch-pan-x touch-pan-y overflow-auto overscroll-contain bg-bg">
+      {(going || d.loading) && loadingBar}
       {d.data.fromCopy && <div className="mx-auto max-w-[800px] p-3"><Callout tone="info" title="Leyendo la copia descargada">Esta versión está guardada en tu dispositivo. Si el autor la actualizó, vuelve a descargarla con conexión.</Callout></div>}
       {pages.length === 0 && <div className="p-6"><Empty>Este capítulo todavía no tiene páginas.</Empty></div>}
       {paged && pages.length > 0 ? (
@@ -219,9 +229,6 @@ export default function Reader() {
             <button type="button" aria-label={`${Math.round(zoom * 100)}%, restablecer zoom`} onClick={() => zoomTo(1)} className="min-w-14 rounded-full px-2 py-1 tabular-nums transition hover:bg-surface">{Math.round(zoom * 100)}%</button>
             <button type="button" aria-label="Acercar" disabled={zoom >= MAX_ZOOM} onClick={() => zoomTo(zoom * 1.25)} className="flex size-9 items-center justify-center rounded-full text-lg transition hover:bg-surface active:scale-95 disabled:opacity-30">+</button>
             <span aria-hidden className="mx-1 h-5 w-px bg-line" />
-            <button type="button" onClick={markPage} className="flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition hover:bg-surface active:scale-95">
-              <svg aria-hidden viewBox="0 0 24 24" className="size-4 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2]"><path d="M6 4h12v17l-6-4-6 4z" /></svg>Guardar página
-            </button>
             <button type="button" aria-label={full ? "Salir de pantalla completa" : "Pantalla completa"} aria-pressed={full} onClick={toggleFull} className="flex size-9 items-center justify-center rounded-full transition hover:bg-surface active:scale-95">
               <svg aria-hidden viewBox="0 0 24 24" className="size-5 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.75]">
                 <path d={full ? "M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" : "M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"} />
@@ -229,12 +236,12 @@ export default function Reader() {
             </button>
           </div>
           <div className="flex items-center gap-2">
-            {prev ? <Link href={`/read/${prev.id}${q}`} aria-label="Capítulo anterior" className={`${step} hover:bg-surface`}>‹</Link> : <span aria-hidden className={`${step} opacity-30`}>‹</span>}
-            <select aria-label="Capítulo" value={id} onChange={(e) => router.push(`/read/${e.target.value}${q}`)}
+            {prev ? <Link href={`/read/${prev.id}${q}`} onClick={() => setGoing(true)} aria-label="Capítulo anterior" className={`${step} hover:bg-surface`}>‹</Link> : <span aria-hidden className={`${step} opacity-30`}>‹</span>}
+            <select aria-label="Capítulo" value={id} onChange={(e) => { setGoing(true); router.push(`/read/${e.target.value}${q}`); }}
               className="h-11 min-w-0 flex-1 rounded-xl border border-field bg-bg px-3 text-sm font-semibold">
               {[...siblings].reverse().map((s) => <option key={s.id} value={s.id}>Capítulo {s.number}{s.id === chapter.id && chapter.name ? ` · ${chapter.name}` : ""}</option>)}
             </select>
-            {next ? <Link href={`/read/${next.id}${q}`} aria-label="Capítulo siguiente" className={`${step} hover:bg-surface`}>›</Link> : <span aria-hidden className={`${step} opacity-30`}>›</span>}
+            {next ? <Link href={`/read/${next.id}${q}`} onClick={() => setGoing(true)} aria-label="Capítulo siguiente" className={`${step} hover:bg-surface`}>›</Link> : <span aria-hidden className={`${step} opacity-30`}>›</span>}
           </div>
         </div>
       </div>
