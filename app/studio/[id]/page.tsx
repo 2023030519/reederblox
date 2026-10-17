@@ -213,10 +213,12 @@ export default function StudioTitle() {
   );
 }
 
-// Deletes storage files first, then the row (pages cascade).
-async function removeChapter(chapterId: string) {
+// Deletes storage files first, then the row (pages cascade). With folder, also files no pages row points to.
+async function removeChapter(chapterId: string, folder?: string) {
   const pages = ok(await supabase.from("pages").select("image_path").eq("chapter_id", chapterId)) as { image_path: string }[];
-  if (pages.length) await supabase.storage.from("media").remove(pages.map((p) => p.image_path));
+  const paths = pages.map((p) => p.image_path);
+  if (folder) paths.push(...((await supabase.storage.from("media").list(folder, { limit: 1000 })).data ?? []).map((f) => `${folder}/${f.name}`));
+  if (paths.length) await supabase.storage.from("media").remove([...new Set(paths)]);
   ok(await supabase.from("chapters").delete().eq("id", chapterId).select());
 }
 
@@ -306,39 +308,55 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
     }
   };
 
+  // Uploading runs in this tab: a locked phone or a lost connection stops it. Picking the same file and number
+  // again resumes: finished chapters are skipped and a half-uploaded one is cleaned up and redone.
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!files.length && !pdf) return setError("Elige imágenes, un ZIP o un PDF.");
     setBusy(true);
     setError("");
-    let done = 0;
+    const lock = await navigator.wakeLock?.request("screen").catch(() => null); // keep the screen on while uploading
+    const stay = (ev: BeforeUnloadEvent) => ev.preventDefault(); // the browser asks before closing the tab
+    addEventListener("beforeunload", stay);
+    let k = 0, skipped = 0;
     try {
+      type Existing = { id: string; number: number; name: string | null; is_published: boolean; pages: { count: number }[] };
+      const existing = new Map((ok(await supabase.from("chapters").select("id,number,name,is_published,pages(count)").eq("title_id", titleId)) as Existing[]).map((c) => [Number(c.number), c]));
       const reader = pdf && await (await import("@/lib/pdf")).openPdf(pdf.file);
       try {
-        for (let k = 0; k < partCount; k++) {
+        for (; k < partCount; k++) {
           const pages = reader
             ? Array.from({ length: Math.min(size, reader.pages - k * size) }, (_, j) => () => reader.page(k * size + j + 1))
             : files.map((f) => () => toWebp(f));
+          const num = Number(number) + k;
           const part = partCount > 1 ? `Parte ${k + 1}` : "";
-          await uploadChapter(Number(number) + k, [name, part].filter(Boolean).join(" · ") || null, pages, (i) => {
+          const chName = [name, part].filter(Boolean).join(" · ") || null;
+          const had = existing.get(num);
+          if (had && had.name === chName && had.pages[0]?.count === pages.length) { skipped++; continue; } // finished on an earlier try
+          // Pages rows are inserted last, so 0 pages + draft is what an interrupted upload leaves behind.
+          if (had && !had.pages[0]?.count && !had.is_published) await removeChapter(had.id, `${uid}/${titleId}/${had.id}`);
+          await uploadChapter(num, chName, pages, (i) => {
             setProgress(`${part ? `${part} de ${partCount} · ` : ""}Subiendo ${i + 1} de ${pages.length}…`);
             setPct(((k * size + i) / totalPages) * 100);
           });
-          done++;
         }
       } finally {
         await reader?.close();
       }
       setPct(100);
-      setNumber(""); setName(""); setFiles([]); setPdf(null); setProgress(""); setInputKey((k) => k + 1);
+      setNumber(""); setName(""); setFiles([]); setPdf(null); setProgress(""); setInputKey((n) => n + 1);
       onDone();
-      toast(partCount > 1 ? `${partCount} capítulos subidos` : "Capítulo subido");
+      toast(skipped ? `${partCount - skipped} subidos; ${skipped} ya estaban completos` : partCount > 1 ? `${partCount} capítulos subidos` : "Capítulo subido");
     } catch (err) {
       const msg = (err as Error).message;
-      setError(done ? `Se subieron ${done} de ${partCount} partes. Falló la parte ${done + 1}: ${msg}` : msg);
+      const again = msg.startsWith("Ya existe") ? "" : "Para continuar, pulsa Subir otra vez (o vuelve a elegir el mismo archivo con el mismo número): lo que ya se subió se salta.";
+      setError(partCount > 1 ? `Se completaron ${k} de ${partCount} partes. Falló la parte ${k + 1}: ${msg} ${again}` : `${msg} ${again}`);
       toast("No se pudo subir el capítulo", "danger");
       setProgress("");
-      if (done) onDone();
+      if (k) onDone();
+    } finally {
+      removeEventListener("beforeunload", stay);
+      lock?.release().catch(() => {});
     }
     setBusy(false);
   };
@@ -401,8 +419,8 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
       )}
 
       <label className="flex items-center gap-2"><input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} className="size-4 accent-[var(--c-accent)]" /> Publicar al terminar</label>
-      {(totalPages > 150 || files.reduce((s, f) => s + f.size, 0) > 60e6) && !busy &&
-        <Callout tone="warning" title="Capítulo grande">Subirlo puede tardar varios minutos. Mantén esta pestaña abierta hasta que termine.</Callout>}
+      {(totalPages > 150 || files.reduce((s, f) => s + f.size, 0) > 60e6) &&
+        <Callout tone="warning" title="Subida grande">Puede tardar varios minutos. Mantén esta pestaña abierta y la pantalla encendida. Si se corta, vuelve a elegir el mismo archivo con el mismo número y continúa donde se quedó.</Callout>}
       {busy && <ProgressBar value={pct} label="Progreso de la subida" />}
       {error && <ErrorBox message={error} />}
       <div className="flex items-center gap-3">
