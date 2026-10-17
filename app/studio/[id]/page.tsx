@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFetch, useMe, ok } from "@/lib/hooks";
 import { supabase, mediaUrl, DEMOGRAPHIES, STATUSES, TYPES, type Chapter, type Title } from "@/lib/supabase";
@@ -25,7 +25,9 @@ const upload = async (path: string, blob: Blob) => {
 export default function StudioTitle() {
   const { id } = useParams<{ id: string }>();
   const { user, ready } = useMe();
+  const router = useRouter();
   const [msg, setMsg] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState<Partial<Title>>({});
   const [genreIds, setGenreIds] = useState<string[]>([]);
   const [extraGenres, setExtraGenres] = useState<{ id: string; name: string }[]>([]); // created here, not in the fetched list yet
@@ -99,6 +101,16 @@ export default function StudioTitle() {
       setMsg("Portada actualizada"); toast("Portada actualizada");
       data.reload();
     } catch (err) { setMsg((err as Error).message); toast((err as Error).message, "danger"); }
+  };
+
+  const deleteTitle = async () => {
+    if (!(await confirmAsync(`¿Borrar «${title.name}» con sus ${chapters.length} capítulos? No se puede deshacer.`, "Borrar obra"))) return;
+    setDeleting(true);
+    try {
+      await removeTitle(user.id, id);
+      toast("Obra borrada");
+      router.push("/studio");
+    } catch (err) { toast((err as Error).message, "danger"); setDeleting(false); }
   };
 
   return (
@@ -209,6 +221,12 @@ export default function StudioTitle() {
           ))}
         </ul>
       </section>
+
+      <section className="space-y-2 rounded-xl border border-danger/40 p-4 sm:p-5">
+        <h2 className="text-lg font-semibold">Borrar obra</h2>
+        <p className="text-sm text-muted">Se borran la obra, todos sus capítulos y páginas, y desaparece de las listas e historiales de los lectores.</p>
+        <Button type="button" variant="danger" loading={deleting} onClick={deleteTitle}>Borrar obra</Button>
+      </section>
     </div>
   );
 }
@@ -218,6 +236,21 @@ async function removeChapter(chapterId: string) {
   const pages = ok(await supabase.from("pages").select("image_path").eq("chapter_id", chapterId)) as { image_path: string }[];
   if (pages.length) await supabase.storage.from("media").remove(pages.map((p) => p.image_path));
   ok(await supabase.from("chapters").delete().eq("id", chapterId).select());
+}
+
+// Collects the file paths first, deletes the row (chapters, pages, genres, lists and reads cascade), then the files.
+// Files go last: an orphan file is harmless, a title pointing at missing images is not.
+async function removeTitle(uid: string, titleId: string) {
+  const chapters = ok(await supabase.from("chapters").select("id").eq("title_id", titleId)) as { id: string }[];
+  const groups: string[][] = []; // one remove() per chapter keeps each request small
+  for (const c of chapters) {
+    const pages = ok(await supabase.from("pages").select("image_path").eq("chapter_id", c.id)) as { image_path: string }[];
+    groups.push(pages.map((p) => p.image_path));
+  }
+  const { data: top } = await supabase.storage.from("media").list(`${uid}/${titleId}`);
+  groups.push((top ?? []).filter((f) => f.id).map((f) => `${uid}/${titleId}/${f.name}`)); // covers, old ones too; folders have no id
+  ok(await supabase.from("titles").delete().eq("id", titleId).select());
+  for (const g of groups) if (g.length) await supabase.storage.from("media").remove(g).catch(() => {});
 }
 
 function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; onDone: () => void }) {
