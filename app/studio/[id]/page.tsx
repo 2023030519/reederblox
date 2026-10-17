@@ -213,12 +213,10 @@ export default function StudioTitle() {
   );
 }
 
-// Deletes storage files first, then the row (pages cascade). With folder, also files no pages row points to.
-async function removeChapter(chapterId: string, folder?: string) {
+// Deletes storage files first, then the row (pages cascade).
+async function removeChapter(chapterId: string) {
   const pages = ok(await supabase.from("pages").select("image_path").eq("chapter_id", chapterId)) as { image_path: string }[];
-  const paths = pages.map((p) => p.image_path);
-  if (folder) paths.push(...((await supabase.storage.from("media").list(folder, { limit: 1000 })).data ?? []).map((f) => `${folder}/${f.name}`));
-  if (paths.length) await supabase.storage.from("media").remove([...new Set(paths)]);
+  if (pages.length) await supabase.storage.from("media").remove(pages.map((p) => p.image_path));
   ok(await supabase.from("chapters").delete().eq("id", chapterId).select());
 }
 
@@ -281,31 +279,29 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
   const partCount = pdf ? Math.ceil(pdf.pages / size) : 1;
   const totalPages = pdf ? pdf.pages : files.length;
 
-  // Creates one chapter from page renderers. On failure it removes what it sent, so there are no half chapters.
-  const uploadChapter = async (num: number, chName: string | null, pages: (() => Promise<{ blob: Blob; width: number; height: number }>)[], onPage: (i: number) => void) => {
-    let chapterId: string | undefined;
-    const sent: string[] = [];
-    try {
+  // Creates one chapter from page renderers, or continues a draft left by an interrupted try (had).
+  // Each page's row is saved right after its image, so a stop never loses more than the page in flight.
+  const uploadChapter = async (num: number, chName: string | null, pages: (() => Promise<{ blob: Blob; width: number; height: number }>)[], onPage: (i: number) => void, had?: { id: string; done: number }) => {
+    let chapterId = had?.id;
+    if (!chapterId) {
       const ch = await supabase.from("chapters").insert({ title_id: titleId, number: num, name: chName }).select("id").single();
       if (ch.error) throw new Error(ch.error.code === "23505" ? `Ya existe un capítulo con el número ${num}.` : ch.error.message);
       chapterId = ch.data.id;
-      const rows = [];
-      for (const [i, render] of pages.entries()) {
-        onPage(i);
-        const { blob, width, height } = await render();
-        const image_path = `${uid}/${titleId}/${chapterId}/${i + 1}.webp`;
-        await upload(image_path, blob);
-        sent.push(image_path);
-        rows.push({ chapter_id: chapterId, position: i + 1, image_path, width, height });
-      }
-      ok(await supabase.from("pages").insert(rows).select());
-      if (publish) ok(await supabase.from("chapters").update({ is_published: true, published_at: new Date().toISOString() }).eq("id", chapterId).select());
-    } catch (err) {
-      // pages rows may not exist yet, so remove what was sent by path
-      if (sent.length) await supabase.storage.from("media").remove(sent).catch(() => {});
-      if (chapterId) await removeChapter(chapterId).catch(() => {});
-      throw err;
+    } else {
+      // An image may have been sent without its row: drop files past the last saved page so they can be sent again.
+      const folder = `${uid}/${titleId}/${chapterId}`;
+      const extra = ((await supabase.storage.from("media").list(folder, { limit: 1000 })).data ?? [])
+        .filter((f) => parseInt(f.name) > had!.done).map((f) => `${folder}/${f.name}`);
+      if (extra.length) await supabase.storage.from("media").remove(extra);
     }
+    for (let i = had?.done ?? 0; i < pages.length; i++) {
+      onPage(i);
+      const { blob, width, height } = await pages[i]();
+      const image_path = `${uid}/${titleId}/${chapterId}/${i + 1}.webp`;
+      await upload(image_path, blob);
+      ok(await supabase.from("pages").insert({ chapter_id: chapterId, position: i + 1, image_path, width, height }).select());
+    }
+    if (publish) ok(await supabase.from("chapters").update({ is_published: true, published_at: new Date().toISOString() }).eq("id", chapterId).select());
   };
 
   // Uploading runs in this tab: a locked phone or a lost connection stops it. Picking the same file and number
@@ -315,7 +311,11 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
     if (!files.length && !pdf) return setError("Elige imágenes, un ZIP o un PDF.");
     setBusy(true);
     setError("");
-    const lock = await navigator.wakeLock?.request("screen").catch(() => null); // keep the screen on while uploading
+    // Keep the screen on while uploading; the browser drops the lock when the tab is hidden, so take it again on return.
+    const wake = () => navigator.wakeLock?.request("screen").catch(() => null);
+    let lock = await wake();
+    const relock = async () => { if (document.visibilityState === "visible") lock = await wake(); };
+    document.addEventListener("visibilitychange", relock);
     const stay = (ev: BeforeUnloadEvent) => ev.preventDefault(); // the browser asks before closing the tab
     addEventListener("beforeunload", stay);
     let k = 0, skipped = 0;
@@ -332,13 +332,18 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
           const part = partCount > 1 ? `Parte ${k + 1}` : "";
           const chName = [name, part].filter(Boolean).join(" · ") || null;
           const had = existing.get(num);
-          if (had && had.name === chName && had.pages[0]?.count === pages.length) { skipped++; continue; } // finished on an earlier try
-          // Pages rows are inserted last, so 0 pages + draft is what an interrupted upload leaves behind.
-          if (had && !had.pages[0]?.count && !had.is_published) await removeChapter(had.id, `${uid}/${titleId}/${had.id}`);
+          const saved = had?.pages[0]?.count ?? 0;
+          if (had && had.name === chName && saved === pages.length) { // finished on an earlier try
+            if (publish && !had.is_published) ok(await supabase.from("chapters").update({ is_published: true, published_at: new Date().toISOString() }).eq("id", had.id).select());
+            skipped++;
+            continue;
+          }
+          // A draft with the same name and fewer pages is an interrupted try: continue it after its last saved page.
+          const resume = had && had.name === chName && !had.is_published ? { id: had.id, done: saved } : undefined;
           await uploadChapter(num, chName, pages, (i) => {
             setProgress(`${part ? `${part} de ${partCount} · ` : ""}Subiendo ${i + 1} de ${pages.length}…`);
             setPct(((k * size + i) / totalPages) * 100);
-          });
+          }, resume);
         }
       } finally {
         await reader?.close();
@@ -356,6 +361,7 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
       if (k) onDone();
     } finally {
       removeEventListener("beforeunload", stay);
+      document.removeEventListener("visibilitychange", relock);
       lock?.release().catch(() => {});
     }
     setBusy(false);

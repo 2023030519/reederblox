@@ -1,17 +1,17 @@
 # Graph Report - readerblox  (2026-10-16)
 
 ## Corpus Check
-- 113 files · ~340,560 words
+- 113 files · ~340,646 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 7 file(s) not represented in the graph (top: .css 3, (none) 2, .csv 2)
 
 ## Summary
-- 1251 nodes · 2054 edges · 98 communities (82 shown, 16 thin omitted)
+- 1251 nodes · 2053 edges · 98 communities (82 shown, 16 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bd751bf8`
+- Built from commit: `2309dce6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -476,7 +476,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `react-dom`, `@tailwindcss/turbopack`, `@types/node` to the rest of the system?**
   _7 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ui.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06786492374727669 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06775599128540305 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `ui.tsx` to `package.json`, `layout.tsx`, `edit-profile.tsx`?**
   _High betweenness centrality (0.042) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**

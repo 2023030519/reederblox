@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "app/studio/[id]/page.tsx": {
-    "mtime": 1792215607.87544,
-    "seen": 1792215624.5382974,
-    "ast_hash": "1498a63208e4648a6537157526042060",
+    "mtime": 1792216394.276006,
+    "seen": 1792216422.561842,
+    "ast_hash": "35321fde3da38d99a2cef02e1c2b1262",
     "semantic_hash": ""
   },
   "app/studio/page.tsx": {
