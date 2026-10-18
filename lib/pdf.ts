@@ -7,13 +7,15 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.m
 export async function openPdf(file: File) {
   const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   const doc = await task.promise.catch(async () => { await task.destroy(); throw new Error(`${file.name}: no es un PDF válido`); });
+  // One canvas reused for every page: a fresh ~14 MB canvas per page outruns the GC on long uploads,
+  // and when the browser runs out of canvas memory it renders silently white instead of failing.
+  const canvas = document.createElement("canvas");
   return {
     pages: doc.numPages,
-    // Page n (1-based) as WebP at most maxW wide, same output as toWebp.
+    // Page n (1-based) as WebP at most maxW wide, same output as toWebp. Not safe to call concurrently.
     async page(n: number, maxW = 1600, quality = 0.8) {
       const page = await doc.getPage(n);
       const viewport = page.getViewport({ scale: maxW / page.getViewport({ scale: 1 }).width });
-      const canvas = document.createElement("canvas");
       canvas.width = Math.round(viewport.width);
       canvas.height = Math.round(viewport.height);
       await page.render({ canvas, viewport }).promise;
@@ -22,6 +24,6 @@ export async function openPdf(file: File) {
       if (!blob) throw new Error(`${file.name}: no se pudo leer la página ${n}`);
       return { blob, width: canvas.width, height: canvas.height };
     },
-    close: () => task.destroy(),
+    close: () => { canvas.width = canvas.height = 0; return task.destroy(); },
   };
 }

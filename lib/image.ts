@@ -12,6 +12,7 @@ export async function toWebp(file: File, maxW = 1600, quality = 0.8) {
   canvas.getContext("2d")!.drawImage(bmp, 0, 0, width, height);
   bmp.close();
   const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/webp", quality));
+  canvas.width = canvas.height = 0; // release the backing store now; hundreds of canvases waiting for GC render white
   if (!blob) throw new Error(`${file.name}: no se pudo convertir`);
   return { blob, width, height };
 }
