@@ -9,6 +9,7 @@
 //     Con varios PDFs, --titulo es la base del nombre: "Capitulo 13" → Capitulo 13, Capitulo 14, … y si no das
 //     --desde, los números de capítulo también arrancan en 13. Sin --titulo, el nombre es el del archivo.
 //   node tools/upload-pdf/run.mjs <archivo-o-carpeta> --seco      only converts/lists, uploads nothing
+//   --sustituir   replaces a colliding UNPUBLISHED draft chapter (leftover from an interrupted attempt)
 //
 // It asks for your readerblox email and password in the terminal (the password is not shown or saved).
 // Same rules as NewChapter in app/studio/[id]/page.tsx; keep them in step.
@@ -33,6 +34,7 @@ const nameNum = MULTI ? NAME.match(/(\d+)\s*$/)?.[1] : null; // "Capitulo 13" �
 const START = Number(opt("--desde", nameNum ?? 1));
 const SIZE = Math.max(1, Math.floor(Number(opt("--por-parte", 100))) || 100);
 const PUBLISH = !args.includes("--borrador");
+const REPLACE = args.includes("--sustituir"); // replace colliding UNPUBLISHED drafts (leftovers from another attempt)
 const MAX_W = 1600, QUALITY = 80; // same as the browser upload (toWebp / lib/pdf)
 const log = (...m) => console.log(new Date().toLocaleTimeString(), ...m);
 const fail = (m) => { console.error(`\n${m}`); process.exit(1); };
@@ -115,13 +117,23 @@ Vuelve a correr el mismo comando para continuar donde se quedó.`));
 
 // Uploads pages from..from+len-1 of doc as chapter num; returns false if it was already complete.
 async function uploadChapter(doc, num, chName, from, len, label) {
-  const had = existing.get(num);
+  let had = existing.get(num);
+  // A draft with another name is a leftover no reader ever saw; --sustituir deletes it and uploads fresh.
+  if (had && !had.is_published && had.name !== chName && REPLACE) {
+    const folder = `${uid}/${title.id}/${had.id}`;
+    const old = (must(await supabase.storage.from("media").list(folder, { limit: 1000 })) ?? []).map((f) => `${folder}/${f.name}`);
+    if (old.length) must(await supabase.storage.from("media").remove(old));
+    must(await supabase.from("chapters").delete().eq("id", had.id).select()); // pages cascade
+    log(`${label}: borrador anterior del capítulo ${num} reemplazado`);
+    had = undefined;
+  }
   const saved = had?.pages[0]?.count ?? 0;
   if (had && had.name === chName && saved === len) { // finished on an earlier run
     if (PUBLISH && !had.is_published) await publish(had.id);
     return false;
   }
-  if (had && !(had.name === chName && !had.is_published)) fail(`Ya existe un capítulo con el número ${num} (${had.name ?? "sin título"}). Usa otro --desde.`);
+  if (had && !(had.name === chName && !had.is_published))
+    fail(`Ya existe un capítulo con el número ${num} (${had.name ?? "sin título"}, ${had.is_published ? "publicado: usa otro --desde" : "borrador: corre con --sustituir para reemplazarlo"}).`);
 
   let id = had?.id;
   if (!id) id = must(await supabase.from("chapters").insert({ title_id: title.id, number: num, name: chName }).select("id").single()).id;

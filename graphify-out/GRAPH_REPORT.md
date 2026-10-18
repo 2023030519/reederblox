@@ -1,17 +1,17 @@
 # Graph Report - readerblox  (2026-10-18)
 
 ## Corpus Check
-- 114 files · ~342,902 words
+- 114 files · ~343,130 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 7 file(s) not represented in the graph (top: .css 3, (none) 2, .csv 2)
 
 ## Summary
-- 1278 nodes · 2103 edges · 100 communities (84 shown, 16 thin omitted)
+- 1279 nodes · 2104 edges · 100 communities (84 shown, 16 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `16adcae0`
+- Built from commit: `b5c2fd6c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -139,7 +139,7 @@
 
 ### Community 0 - "ui.tsx"
 Cohesion: 0.07
-Nodes (113): Library(), SORTS, History(), Row, Card, Full, ListPage(), ListRow (+105 more)
+Nodes (112): Library(), SORTS, History(), Row, Card, Full, ListPage(), ListRow (+104 more)
 
 ### Community 1 - "package.json"
 Cohesion: 0.13
@@ -303,7 +303,7 @@ Nodes (10): 1. What the study measured, 2. The scale: few sizes, far apart, 3. S
 
 ### Community 47 - "edit-profile.tsx"
 Cohesion: 0.24
-Nodes (13): AtIcon(), AvatarHeader(), BackIcon(), CameraIcon(), EditProfileScreen(), FieldProps, initials(), Kind (+5 more)
+Nodes (14): AtIcon(), AvatarHeader(), BackIcon(), CameraIcon(), EditProfileScreen(), FieldProps, initials(), Kind (+6 more)
 
 ### Community 48 - "convert"
 Cohesion: 0.47
@@ -471,27 +471,27 @@ Nodes (5): scripts, build, dev, lint, start
 
 ### Community 98 - "upload-pdf/run.mjs"
 Cohesion: 0.11
-Nodes (13): args, DRY, env, existing, fail(), files, isId, NAME (+5 more)
+Nodes (14): args, DRY, env, existing, fail(), files, isId, NAME (+6 more)
 
 ## Knowledge Gaps
 - **7 isolated node(s):** `react-dom`, `@tailwindcss/turbopack`, `@types/node`, `@types/react`, `@types/react-dom` (+2 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 838 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 839 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `@supabase/supabase-js` connect `package.json` to `ui.tsx`, `upload-pdf/run.mjs`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
 - **What connects `react-dom`, `@tailwindcss/turbopack`, `@types/node` to the rest of the system?**
   _7 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ui.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06610363882806798 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06632814979371628 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `ui.tsx` to `package.json`, `layout.tsx`, `edit-profile.tsx`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.13333333333333333 - nodes in this community are weakly interconnected._
 - **Why does `@playwright/test` connect `data.ts` to `package.json`, `ref_node_fs`, `run.mjs`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Should `layout.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.07897793263646923 - nodes in this community are weakly interconnected._
