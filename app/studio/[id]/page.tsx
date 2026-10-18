@@ -234,7 +234,7 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
   const [pct, setPct] = useState(0);
   const [drag, setDrag] = useState(false);
   const [inputKey, setInputKey] = useState(0); // remounts the file input to clear it
-  const [pdf, setPdf] = useState<{ file: File; pages: number } | null>(null);
+  const [pdf, setPdf] = useState<{ file: File; pages: number }[] | null>(null);
   const [perPart, setPerPart] = useState("100");
 
   // Object URLs for the thumbnails; revoked when the list changes.
@@ -244,18 +244,23 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [files]);
 
-  // Accepts images and/or a ZIP (shown as thumbnails), or one PDF (rendered page by page while uploading).
+  // Accepts images and/or a ZIP (shown as thumbnails), one PDF (rendered page by page while uploading),
+  // or several PDFs: one chapter each, in natural file-name order (2 before 10).
   const pick = async (picked: File[]) => {
     if (!picked.length) return;
     setError("");
     setReading(true);
     try {
-      const doc = picked.find(isPdf);
-      if (doc) {
-        if (picked.length > 1) throw new Error("Sube el PDF solo, sin otras imágenes.");
-        const reader = await (await import("@/lib/pdf")).openPdf(doc);
-        await reader.close();
-        setPdf({ file: doc, pages: reader.pages });
+      const docs = picked.filter(isPdf).sort(byName);
+      if (docs.length) {
+        if (docs.length < picked.length) throw new Error("Sube los PDF solos, sin mezclar con imágenes.");
+        if (docs.length === 1) {
+          const reader = await (await import("@/lib/pdf")).openPdf(docs[0]);
+          await reader.close();
+          setPdf([{ file: docs[0], pages: reader.pages }]);
+        } else {
+          setPdf(docs.map((file) => ({ file, pages: 0 }))); // each one is opened when its turn comes
+        }
         setFiles([]);
       } else {
         const images = (await expandFiles(picked)).sort(byName);
@@ -263,7 +268,7 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
         setFiles(images);
         setPdf(null);
       }
-      const pack = picked.find((f) => isZip(f) || isPdf(f));
+      const pack = docs[0] ?? picked.find(isZip);
       if (!number && pack) {
         const n = pack.name.replace(/\.(zip|pdf)$/i, "").match(/(\d+(?:\.\d+)?)(?!.*\d)/); // last number in the file name
         if (n) setNumber(n[1]);
@@ -275,9 +280,11 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
   };
 
   // A PDF longer than "páginas por parte" becomes consecutive chapters: Parte 1, Parte 2…
+  // Several PDFs skip that split: each file is one whole chapter.
+  const multi = (pdf?.length ?? 0) > 1;
   const size = Math.max(1, Math.floor(Number(perPart)) || 1);
-  const partCount = pdf ? Math.ceil(pdf.pages / size) : 1;
-  const totalPages = pdf ? pdf.pages : files.length;
+  const partCount = pdf ? (multi ? pdf.length : Math.ceil(pdf[0].pages / size)) : 1;
+  const totalPages = pdf ? pdf[0].pages : files.length; // unknown with several PDFs; progress then counts chapters
 
   // Creates one chapter from page renderers, or continues a draft left by an interrupted try (had).
   // Each page's row is saved right after its image, so a stop never loses more than the page in flight.
@@ -322,31 +329,45 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
     try {
       type Existing = { id: string; number: number; name: string | null; is_published: boolean; pages: { count: number }[] };
       const existing = new Map((ok(await supabase.from("chapters").select("id,number,name,is_published,pages(count)").eq("title_id", titleId)) as Existing[]).map((c) => [Number(c.number), c]));
-      const reader = pdf && await (await import("@/lib/pdf")).openPdf(pdf.file);
+      const lib = pdf && (await import("@/lib/pdf"));
+      const single = lib && !multi ? await lib.openPdf(pdf![0].file) : null;
+      // "Capitulo 13" as título with several PDFs → Capitulo 13, Capitulo 14, …; empty leaves the default «Capítulo N».
+      const nameNum = multi ? name.match(/(\d+)\s*$/)?.[1] : null;
       try {
         for (; k < partCount; k++) {
-          const pages = reader
-            ? Array.from({ length: Math.min(size, reader.pages - k * size) }, (_, j) => () => reader.page(k * size + j + 1))
-            : files.map((f) => () => toWebp(f));
-          const num = Number(number) + k;
-          const part = partCount > 1 ? `Parte ${k + 1}` : "";
-          const chName = [name, part].filter(Boolean).join(" · ") || null;
-          const had = existing.get(num);
-          const saved = had?.pages[0]?.count ?? 0;
-          if (had && had.name === chName && saved === pages.length) { // finished on an earlier try
-            if (publish && !had.is_published) ok(await supabase.from("chapters").update({ is_published: true, published_at: new Date().toISOString() }).eq("id", had.id).select());
-            skipped++;
-            continue;
+          const reader = multi ? await lib!.openPdf(pdf![k].file) : single;
+          try {
+            const pages = reader
+              ? multi
+                ? Array.from({ length: reader.pages }, (_, j) => () => reader.page(j + 1))
+                : Array.from({ length: Math.min(size, reader.pages - k * size) }, (_, j) => () => reader.page(k * size + j + 1))
+              : files.map((f) => () => toWebp(f));
+            const num = Number(number) + k;
+            const part = !multi && partCount > 1 ? `Parte ${k + 1}` : "";
+            const chName = multi
+              ? (name ? (nameNum ? name.replace(/\d+\s*$/, "") + (Number(nameNum) + k) : `${name} ${num}`) : null)
+              : [name, part].filter(Boolean).join(" · ") || null;
+            const had = existing.get(num);
+            const saved = had?.pages[0]?.count ?? 0;
+            if (had && had.name === chName && saved === pages.length) { // finished on an earlier try
+              if (publish && !had.is_published) ok(await supabase.from("chapters").update({ is_published: true, published_at: new Date().toISOString() }).eq("id", had.id).select());
+              skipped++;
+              continue;
+            }
+            // A draft with the same name and fewer pages is an interrupted try: continue it after its last saved page.
+            const resume = had && had.name === chName && !had.is_published ? { id: had.id, done: saved } : undefined;
+            await uploadChapter(num, chName, pages, (i) => {
+              setProgress(multi
+                ? `${pdf![k].file.name} (${k + 1} de ${partCount}) · página ${i + 1} de ${pages.length}…`
+                : `${part ? `${part} de ${partCount} · ` : ""}Subiendo ${i + 1} de ${pages.length}…`);
+              setPct(multi ? ((k + i / pages.length) / partCount) * 100 : ((k * size + i) / totalPages) * 100);
+            }, resume);
+          } finally {
+            if (multi && reader) await reader.close();
           }
-          // A draft with the same name and fewer pages is an interrupted try: continue it after its last saved page.
-          const resume = had && had.name === chName && !had.is_published ? { id: had.id, done: saved } : undefined;
-          await uploadChapter(num, chName, pages, (i) => {
-            setProgress(`${part ? `${part} de ${partCount} · ` : ""}Subiendo ${i + 1} de ${pages.length}…`);
-            setPct(((k * size + i) / totalPages) * 100);
-          }, resume);
         }
       } finally {
-        await reader?.close();
+        await single?.close();
       }
       setPct(100);
       setNumber(""); setName(""); setFiles([]); setPdf(null); setProgress(""); setInputKey((n) => n + 1);
@@ -354,8 +375,10 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
       toast(skipped ? `${partCount - skipped} subidos; ${skipped} ya estaban completos` : partCount > 1 ? `${partCount} capítulos subidos` : "Capítulo subido");
     } catch (err) {
       const msg = (err as Error).message;
-      const again = msg.startsWith("Ya existe") ? "" : "Para continuar, pulsa Subir otra vez (o vuelve a elegir el mismo archivo con el mismo número): lo que ya se subió se salta.";
-      setError(partCount > 1 ? `Se completaron ${k} de ${partCount} partes. Falló la parte ${k + 1}: ${msg} ${again}` : `${msg} ${again}`);
+      const again = msg.startsWith("Ya existe") ? "" : `Para continuar, pulsa Subir otra vez (o vuelve a elegir ${multi ? "los mismos archivos" : "el mismo archivo"} con el mismo número): lo que ya se subió se salta.`;
+      setError(partCount > 1
+        ? `Se completaron ${k} de ${partCount} ${multi ? "capítulos" : "partes"}. Falló ${multi ? `«${pdf![k]?.file.name}»` : `la parte ${k + 1}`}: ${msg} ${again}`
+        : `${msg} ${again}`);
       toast("No se pudo subir el capítulo", "danger");
       setProgress("");
       if (k) onDone();
@@ -381,8 +404,8 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
         onDrop={(e) => { e.preventDefault(); setDrag(false); pick([...e.dataTransfer.files]); }}
         className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed p-6 text-center transition-colors focus-within:border-accent ${drag ? "border-accent bg-bg" : "border-field"}`}
       >
-        <span className="font-semibold">{reading ? "Leyendo archivos…" : "Arrastra aquí las páginas, un ZIP o un PDF"}</span>
-        <span className="text-sm text-muted">o haz clic para elegir · JPG, PNG, WebP, un .zip con las imágenes o un .pdf</span>
+        <span className="font-semibold">{reading ? "Leyendo archivos…" : "Arrastra aquí las páginas, un ZIP o PDFs"}</span>
+        <span className="text-sm text-muted">o haz clic para elegir · JPG, PNG, WebP, un .zip con las imágenes, un .pdf, o varios .pdf (un capítulo cada uno)</span>
         <input key={inputKey} type="file" multiple accept="image/jpeg,image/png,image/webp,.zip,application/zip,.pdf,application/pdf" className="sr-only"
           aria-label="Páginas del capítulo: imágenes, un ZIP o un PDF"
           onChange={(e) => pick([...(e.target.files ?? [])])} />
@@ -391,15 +414,32 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
       {pdf && (
         <div className="space-y-3 rounded-lg border border-line bg-bg p-3">
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="min-w-0 truncate font-medium">{pdf.file.name} · {pdf.pages} páginas · {(pdf.file.size / 1e6).toFixed(1)} MB</span>
+            <span className="min-w-0 truncate font-medium">
+              {multi ? `${pdf.length} PDFs · un capítulo cada uno` : `${pdf[0].file.name} · ${pdf[0].pages} páginas · ${(pdf[0].file.size / 1e6).toFixed(1)} MB`}
+            </span>
             <button type="button" className="shrink-0 text-accent" disabled={busy} onClick={() => { setPdf(null); setInputKey((k) => k + 1); }}>Quitar</button>
           </div>
-          <Field label="Páginas por parte"><Input required type="number" min="1" step="1" value={perPart} disabled={busy} onChange={(e) => setPerPart(e.target.value)} /></Field>
-          <p className="text-sm text-muted">
-            {partCount > 1
-              ? `Se crearán ${partCount} capítulos${number ? `, del ${number} al ${Number(number) + partCount - 1}` : ""}, llamados «Parte 1», «Parte 2»…`
-              : "Se creará un solo capítulo."}
-          </p>
+          {multi ? (
+            <>
+              <ol className="max-h-48 overflow-y-auto text-sm text-muted">
+                {pdf.map((p, i) => (
+                  <li key={fileKey(p.file)} className="truncate py-0.5">
+                    <span className="font-mono text-fg">{(Number(number) || 1) + i}</span> · {p.file.name}
+                  </li>
+                ))}
+              </ol>
+              <p className="text-sm text-muted">En orden de nombre de archivo (2 antes que 10). Si el orden está mal, renombra los archivos y vuelve a elegirlos. El título «Capitulo 13» se vuelve «Capitulo 14», «Capitulo 15»… en los siguientes.</p>
+            </>
+          ) : (
+            <>
+              <Field label="Páginas por parte"><Input required type="number" min="1" step="1" value={perPart} disabled={busy} onChange={(e) => setPerPart(e.target.value)} /></Field>
+              <p className="text-sm text-muted">
+                {partCount > 1
+                  ? `Se crearán ${partCount} capítulos${number ? `, del ${number} al ${Number(number) + partCount - 1}` : ""}, llamados «Parte 1», «Parte 2»…`
+                  : "Se creará un solo capítulo."}
+              </p>
+            </>
+          )}
         </div>
       )}
 
@@ -425,7 +465,7 @@ function NewChapter({ titleId, uid, onDone }: { titleId: string; uid: string; on
       )}
 
       <label className="flex items-center gap-2"><input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} className="size-4 accent-[var(--c-accent)]" /> Publicar al terminar</label>
-      {(totalPages > 150 || files.reduce((s, f) => s + f.size, 0) > 60e6) &&
+      {(totalPages > 150 || multi || files.reduce((s, f) => s + f.size, 0) > 60e6) &&
         <Callout tone="warning" title="Subida grande">Puede tardar varios minutos. Mantén esta pestaña abierta y la pantalla encendida. Si se corta, vuelve a elegir el mismo archivo con el mismo número y continúa donde se quedó.</Callout>}
       {busy && <ProgressBar value={pct} label="Progreso de la subida" />}
       {error && <ErrorBox message={error} />}
