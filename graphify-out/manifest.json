@@ -54,9 +54,9 @@
     "semantic_hash": ""
   },
   "app/offline/page.tsx": {
-    "mtime": 1792170703.3910637,
-    "seen": 1792170949.5995545,
-    "ast_hash": "bdc134cb53ed6217e0dd03bd45e1865c",
+    "mtime": 1792297091.9800525,
+    "seen": 1792297121.3994448,
+    "ast_hash": "f7377558be9f1dbd3a14fd136763f67e",
     "semantic_hash": ""
   },
   "app/page.tsx": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "app/studio/[id]/page.tsx": {
-    "mtime": 1792216394.276006,
-    "seen": 1792216422.561842,
-    "ast_hash": "35321fde3da38d99a2cef02e1c2b1262",
+    "mtime": 1792287167.7856925,
+    "seen": 1792287190.2321682,
+    "ast_hash": "3a62636ee1cb25955588227cb4848aab",
     "semantic_hash": ""
   },
   "app/studio/page.tsx": {
@@ -168,15 +168,15 @@
     "semantic_hash": ""
   },
   "lib/image.ts": {
-    "mtime": 1792094055.2815826,
-    "seen": 1792122292.2584202,
-    "ast_hash": "d91d93365d084ddef857ffbb5b7364e2",
+    "mtime": 1792339288.0786123,
+    "seen": 1792339473.6337695,
+    "ast_hash": "3fdb2ed929895f53c34b4515e2caa137",
     "semantic_hash": ""
   },
   "lib/offline.ts": {
-    "mtime": 1792106364.8044014,
-    "seen": 1792122292.258423,
-    "ast_hash": "5b57f1d7f697d9c4f0b6fd45fc7e8887",
+    "mtime": 1792297090.3255546,
+    "seen": 1792297121.3995461,
+    "ast_hash": "5184600c0ed42f1df17d67f7d1ededb4",
     "semantic_hash": ""
   },
   "lib/supabase.ts": {
@@ -726,9 +726,9 @@
     "semantic_hash": ""
   },
   "lib/pdf.ts": {
-    "mtime": 1792210773.7306972,
-    "seen": 1792210878.5154047,
-    "ast_hash": "7ca8a5d45132e915985685f984c62894",
+    "mtime": 1792339287.7563865,
+    "seen": 1792339473.6337724,
+    "ast_hash": "b2c758f0c55e6490c91041b3f62e90dd",
     "semantic_hash": ""
   },
   "replica/migrations/003-reading-checkpoint.sql": {
@@ -750,9 +750,9 @@
     "semantic_hash": ""
   },
   "tools/upload-pdf/run.mjs": {
-    "mtime": 1792216536.682312,
-    "seen": 1792216574.7625484,
-    "ast_hash": "18d6dc6402492ed744b05f4a35e97896",
+    "mtime": 1792286544.6454473,
+    "seen": 1792286563.4807477,
+    "ast_hash": "1cd7dd6f83a9375c886de70ecef678e0",
     "semantic_hash": ""
   }
 }
