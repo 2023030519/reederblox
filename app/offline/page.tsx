@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useFetch, useMe } from "@/lib/hooks";
 import { supabase, mediaUrl, STATUSES } from "@/lib/supabase";
 import { STATUS_TONE } from "@/lib/tags";
-import { formatBytes, listSaved, removeSaved, supportsOffline, type SavedChapter } from "@/lib/offline";
+import { exportSaved, formatBytes, listSaved, removeSaved, supportsExport, supportsOffline, type SavedChapter } from "@/lib/offline";
 import { confirmAsync, toast } from "@/lib/feedback";
-import { Callout, CoverCard, Empty, ErrorBox, PageTitle, ProgressBar, Skeleton } from "@/components/ui";
+import { Button, Callout, CoverCard, Empty, ErrorBox, PageTitle, ProgressBar, Skeleton } from "@/components/ui";
 
 type Group = { slug: string; name: string; cover: string | null; type?: string; status?: string; chapters: (SavedChapter & { date: string })[]; bytes: number };
 
@@ -45,6 +45,7 @@ export default function Downloads() {
   const [quota, setQuota] = useState<{ used: number; total: number } | null>(null);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const [read, setRead] = useState<Set<string>>(new Set());
+  const [exporting, setExporting] = useState("");
 
   useEffect(() => {
     navigator.storage?.estimate?.().then((e) => e.quota && setQuota({ used: e.usage ?? 0, total: e.quota }));
@@ -72,6 +73,17 @@ export default function Downloads() {
     const { error } = await q;
     if (error) return toast("No se pudo actualizar", "danger");
     setRead((s) => { const n = new Set(s); if (on) n.add(cid); else n.delete(cid); return n; });
+  };
+
+  const exportAll = async () => {
+    setExporting("Guardando…");
+    try {
+      const n = await exportSaved((done, total) => setExporting(`Guardando ${done} de ${total}…`));
+      toast(`${n} ${n === 1 ? "capítulo guardado" : "capítulos guardados"} en la carpeta readerblox`);
+    } catch (e) {
+      if ((e as DOMException)?.name !== "AbortError") toast((e as Error).message || "No se pudo guardar en la carpeta", "danger");
+    }
+    setExporting("");
   };
 
   const remove = async (c: SavedChapter) => {
@@ -116,6 +128,12 @@ export default function Downloads() {
         <div className="space-y-1">
           <ProgressBar value={(quota.used / quota.total) * 100} label="Espacio usado por el sitio en este dispositivo" />
           <p className="text-xs text-muted">Espacio usado en este dispositivo: {formatBytes(quota.used)} de {formatBytes(quota.total)}</p>
+        </div>
+      )}
+      {supportsExport() && groups.length > 0 && (
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" loading={!!exporting} onClick={exportAll}>Guardar en una carpeta…</Button>
+          <span role="status" className="text-sm text-muted">{exporting || "Crea archivos reales: readerblox/<obra>/Capítulo N/"}</span>
         </div>
       )}
       {groups.length === 0

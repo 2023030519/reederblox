@@ -80,3 +80,26 @@ export async function saveChapter(chapterId: string, onProgress?: (done: number,
 }
 
 export const formatBytes = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`);
+
+// Copies every saved chapter to real files: <carpeta elegida>/readerblox/<obra>/Capítulo N[ - nombre]/001.webp…
+// Files are always rewritten, so a half-done export fixes itself on the next run.
+// shortcut: File System Access API, so Chrome/Edge de escritorio only; a ZIP download would cover the rest.
+const clean = (s: string) => s.replace(/[\\/:*?"<>|]/g, "-").trim();
+export const supportsExport = () => typeof window !== "undefined" && "showDirectoryPicker" in window;
+export async function exportSaved(onProgress?: (done: number, total: number) => void) {
+  const picked = await (window as unknown as { showDirectoryPicker: (o: { mode: string }) => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker({ mode: "readwrite" });
+  const root = await picked.getDirectoryHandle("readerblox", { create: true });
+  const saved = await listSaved();
+  let done = 0;
+  for (const c of saved) {
+    const obra = await root.getDirectoryHandle(clean(c.title.name), { create: true });
+    const dir = await obra.getDirectoryHandle(clean(`Capítulo ${c.chapter.number}${c.chapter.name ? ` - ${c.chapter.name}` : ""}`), { create: true });
+    for (const p of c.pages) {
+      const w = await (await dir.getFileHandle(`${String(p.position).padStart(3, "0")}.webp`, { create: true })).createWritable();
+      await w.write(p.blob);
+      await w.close();
+    }
+    onProgress?.(++done, saved.length);
+  }
+  return saved.length;
+}
